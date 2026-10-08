@@ -133,7 +133,13 @@ export default function China() {
                   // 都放不下则横排省略号，悬停/点击可见全称
                   const cardPx = (p.widthPct / 100) * (COL_W - 16) - 7;
                   const horizFit = cardPx >= p.it.n.length * 12 + 8;
-                  const verticalFit = !horizFit && p.height >= p.it.n.length * 12 + 10;
+                  // 竖排：能放几个字放几个字，放不下全名则以省略号收尾
+                  const vertChars = Math.floor((p.height - 10) / 12);
+                  const useVertical = !horizFit && vertChars >= 3;
+                  const vLabel =
+                    p.it.n.length > vertChars
+                      ? p.it.n.slice(0, Math.max(vertChars - 1, 1)) + "…"
+                      : p.it.n;
                   return (
                     <div key={key}>
                       {/* 真实年代色条：钉在精确起讫点，不做推移 */}
@@ -161,12 +167,12 @@ export default function China() {
                         onKeyDown={(e) => e.key === "Enter" && setSel({ it: p.it, lane })}
                         title={p.it.n}
                       >
-                        {verticalFit ? (
+                        {useVertical ? (
                           <div
                             className="mx-auto text-[11px] font-medium leading-none tracking-[0.08em]"
                             style={{ writingMode: "vertical-rl" }}
                           >
-                            {p.it.n}
+                            {vLabel}
                           </div>
                         ) : (
                           <>
