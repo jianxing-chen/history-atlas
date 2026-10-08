@@ -129,6 +129,11 @@ export default function China() {
                   const key = lane.id + ":" + p.it.n;
                   const active = sel?.it === p.it;
                   const tall = p.height >= 56;
+                  // 名字优先：横排放得下就横排+（够高时）年代；横排放不下且够高则竖排名字；
+                  // 都放不下则横排省略号，悬停/点击可见全称
+                  const cardPx = (p.widthPct / 100) * (COL_W - 16) - 7;
+                  const horizFit = cardPx >= p.it.n.length * 12 + 8;
+                  const verticalFit = !horizFit && p.height >= p.it.n.length * 12 + 10;
                   return (
                     <div key={key}>
                       {/* 真实年代色条：钉在精确起讫点，不做推移 */}
@@ -154,14 +159,26 @@ export default function China() {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => e.key === "Enter" && setSel({ it: p.it, lane })}
+                        title={p.it.n}
                       >
-                        <div className="truncate text-[12px] font-medium leading-tight" title={p.it.n}>
-                          {p.it.n}
-                        </div>
-                        {tall && (
-                          <div className="year-num text-[10px]" style={{ color: lane.pigment }}>
-                            {fmtShort(p.it.s)} — {fmtShort(p.it.e)}
+                        {verticalFit ? (
+                          <div
+                            className="mx-auto text-[11px] font-medium leading-none tracking-[0.08em]"
+                            style={{ writingMode: "vertical-rl" }}
+                          >
+                            {p.it.n}
                           </div>
+                        ) : (
+                          <>
+                            <div className="truncate text-[12px] font-medium leading-tight">
+                              {p.it.n}
+                            </div>
+                            {tall && horizFit && (
+                              <div className="year-num text-[10px]" style={{ color: lane.pigment }}>
+                                {fmtShort(p.it.s)} — {fmtShort(p.it.e)}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
