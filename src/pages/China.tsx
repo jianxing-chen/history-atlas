@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { CHINA_LANES, type CItem, type CLane } from "@/data/china";
 import { ty, totalHeight, ticks, fmtYear, fmtShort, CHINA_BANDS } from "@/lib/chinaTime";
-import { packSpans, packPointsTracked } from "@/lib/pack";
+import { packSpans, packPointsTracked, pointTracksFor } from "@/lib/pack";
 import { SiteNav } from "@/components/SiteNav";
 import { useTitle } from "@/lib/useTitle";
 
@@ -21,7 +21,9 @@ export default function China() {
       CHINA_LANES.map((lane) => ({
         lane,
         spans: lane.kind === "span" ? packSpans(lane.items, ty, COL_W) : null,
-        points: lane.kind === "point" ? packPointsTracked(lane.items, ty, COL_W) : null,
+        points: lane.kind === "point"
+          ? packPointsTracked(lane.items, ty, COL_W, pointTracksFor(lane.items.length))
+          : null,
       })),
     []
   );

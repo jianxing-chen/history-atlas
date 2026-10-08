@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { REGIONS, BANDS, GLOBAL_EVENTS, type WEvent, type Region } from "@/data/world";
 import { ty, totalHeight, ticks, fmtYear } from "@/lib/time";
-import { packPoints } from "@/lib/pack";
+import { packPointsTracked } from "@/lib/pack";
+import { pointTracksFor } from "@/lib/pack";
 import { SiteNav } from "@/components/SiteNav";
 import { useTitle } from "@/lib/useTitle";
 
@@ -16,15 +17,17 @@ const GLOBAL_META: Region = {
   events: [],
 };
 
-/* 世界事件按节点卡布局：时间钉在真实位置，标签卡防碰撞下推 */
+/* 世界事件按节点卡布局：时间钉在真实位置，标签卡双股道防碰撞下推 */
 type EvItem = WEvent & { n: string; s: number; e: number };
-function layoutEvents(events: WEvent[]) {
+function layoutEvents(events: WEvent[], colW: number) {
   const items: EvItem[] = events.map((ev) => ({ ...ev, n: ev.t, s: ev.y, e: ev.y }));
-  return packPoints(items, ty, COL_W).map((p) => ({
+  return packPointsTracked(items, ty, colW, pointTracksFor(events.length)).map((p) => ({
     ev: p.it,
     top: p.top,
     h: p.h,
     trueTop: p.trueTop,
+    track: p.track,
+    trackCount: p.trackCount,
   }));
 }
 
@@ -40,15 +43,24 @@ export default function World() {
   // 每列折叠状态：默认纲要（major/star），可逐列展开全部
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const allOpen = REGIONS.every((r) => open[r.id]);
+  // 展开的列在网格中占 1.45fr；按最小容器宽 1352 估算每列实际像素宽（保守，宁可高估卡高）
+  const OPEN_RATIO = 1.45;
+  const weights = REGIONS.map((r) => (open[r.id] ? OPEN_RATIO : 1));
+  const totalW = weights.reduce((a, b) => a + b, 0);
   const placedByRegion = useMemo(
     () =>
-      REGIONS.map((r) => {
+      REGIONS.map((r, i) => {
         const visible = open[r.id]
           ? r.events
           : r.events.filter((ev) => ev.major || ev.star);
-        return { region: r, items: layoutEvents(visible), total: r.events.length };
+        const estW = Math.round(((92 + REGIONS.length * COL_W - 92) * weights[i]) / totalW);
+        return {
+          region: r,
+          items: layoutEvents(visible, estW),
+          total: r.events.length,
+        };
       }),
-    [open]
+    [open, weights, totalW]
   );
   const allTicks = useMemo(() => ticks(), []);
   // 跨地区横贯线标签：真实年份位置 + 最小间距下推
@@ -69,7 +81,7 @@ export default function World() {
     }
     return m;
   }, [placedByRegion, H]);
-  const GRID = `64px 28px repeat(${REGIONS.length}, 1fr)`;
+  const GRID = `64px 28px ${weights.map((w) => (w > 1 ? `${OPEN_RATIO}fr` : "1fr")).join(" ")}`;
 
   return (
     <div className="min-h-screen">
@@ -211,30 +223,41 @@ export default function World() {
             {/* 地区列 */}
             {placedByRegion.map(({ region, items }) => (
               <div key={region.id} className="region-col relative z-10 px-2">
-                {items.map(({ ev, top, trueTop }) => {
+                {items.map(({ ev, top, trueTop, track, trackCount }) => {
                   const key = region.id + ":" + ev.y + ev.t;
                   const active = sel?.ev === ev;
                   const drift = top - trueTop;
+                  const lanePct = 100 / trackCount;
+                  const trackLeft = `calc(${track * lanePct}% + ${track === 0 ? 0 : 3}px)`;
                   return (
                     <div key={key}>
-                      {/* 时间钉：标记真实年份位置 */}
+                      {/* 时间钉：标记真实年份位置（随股道横移） */}
                       <div
                         className="true-dot"
-                        style={{ top: trueTop - 3, left: 0, background: region.pigment }}
+                        style={{
+                          top: trueTop - 3,
+                          left: `calc(${track * lanePct}% - 2px)`,
+                          background: region.pigment,
+                        }}
                       />
                       {drift > 5 && (
                         <div
                           className="true-link"
-                          style={{ top: trueTop + 4, height: drift - 5 }}
+                          style={{
+                            top: trueTop + 4,
+                            height: drift - 5,
+                            left: `calc(${track * lanePct}% + 1px)`,
+                          }}
                         />
                       )}
                       <div
-                        className={"pencil-card absolute left-2 right-2" + (active ? " is-active" : "")}
-                        style={{ top }}
+                        className={"pencil-card absolute" + (active ? " is-active" : "")}
+                        style={{ top, left: trackLeft, width: `calc(${lanePct}% - 6px)` }}
                         onClick={() => setSel(active ? null : { ev, region })}
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => e.key === "Enter" && setSel({ ev, region })}
+                        title={ev.t}
                       >
                       <div
                         className="year-num text-[11px] font-semibold"
@@ -244,11 +267,10 @@ export default function World() {
                       </div>
                       <div
                         className={
-                          (ev.star
-                            ? "font-serif-cjk text-[14px] font-semibold"
-                            : "text-[13px] font-medium") + " truncate leading-snug"
+                          ev.star
+                            ? "font-serif-cjk text-[13px] font-semibold leading-snug"
+                            : "text-[12px] font-medium leading-snug"
                         }
-                        title={ev.t}
                       >
                         {ev.star && "★ "}
                         {ev.t}

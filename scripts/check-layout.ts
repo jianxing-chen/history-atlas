@@ -4,7 +4,7 @@ import { CHINA_LANES } from "../src/data/china";
 import { REGIONS } from "../src/data/world";
 import { ty as chinaTy } from "../src/lib/chinaTime";
 import { ty as worldTy } from "../src/lib/time";
-import { packSpans, packPoints, packPointsTracked, countOverlaps } from "../src/lib/pack";
+import { packSpans, packPointsTracked, countOverlaps, pointTracksFor } from "../src/lib/pack";
 
 const CHINA_COL_W = 200;
 const WORLD_COL_W = 210;
@@ -44,7 +44,7 @@ for (const lane of CHINA_LANES.filter((l) => l.kind === "span")) {
 console.log("中国卷 · 大事记");
 {
   const lane = CHINA_LANES.find((l) => l.kind === "point")!;
-  const placed = packPointsTracked(lane.items, chinaTy, CHINA_COL_W);
+  const placed = packPointsTracked(lane.items, chinaTy, CHINA_COL_W, pointTracksFor(lane.items.length));
   checks++;
   const badDot = placed.filter((p) => Math.abs(p.trueTop - chinaTy(p.it.s)) > 0.01);
   if (badDot.length) fail(`大事记: ${badDot.length} 个时间钉未对齐真实年份`);
@@ -63,11 +63,16 @@ console.log("中国卷 · 大事记");
 console.log("世界卷 · 六地区");
 for (const region of REGIONS) {
   const items = region.events.map((ev) => ({ ...ev, n: ev.t, s: ev.y, e: ev.y }));
-  const placed = packPoints(items, worldTy, WORLD_COL_W);
+  const placed = packPointsTracked(items, worldTy, WORLD_COL_W, pointTracksFor(items.length));
   checks++;
   const badDot = placed.filter((p) => Math.abs(p.trueTop - worldTy(p.it.y)) > 0.01);
   if (badDot.length) fail(`${region.name}: ${badDot.length} 个时间钉未对齐真实年份`);
-  const rects = placed.map((p) => ({ x: 0, y: p.top, w: WORLD_COL_W, h: p.h }));
+  const rects = placed.map((p) => ({
+    x: (p.track * (WORLD_COL_W - 16)) / p.trackCount,
+    y: p.top,
+    w: (WORLD_COL_W - 16) / p.trackCount - 6,
+    h: p.h,
+  }));
   const ov = countOverlaps(rects);
   if (ov) fail(`${region.name}: 检测到 ${ov} 对卡片重叠`);
   if (!badDot.length && !ov) ok(`${region.name}（${placed.length} 条）时间钉对齐、零重叠`);

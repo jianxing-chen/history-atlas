@@ -32,6 +32,11 @@ export interface PlacedPointTrack<T extends SpanItem = SpanItem>
 
 export const GAP = 5;
 
+/* 节点股道数：条目多的列自动加股（页面与校验共用，保持一致） */
+export function pointTracksFor(count: number): number {
+  return count > 32 ? 3 : 2;
+}
+
 /* 标题按可用宽度折行估算（CJK 按 12.5px/字） */
 export function estLines(text: string, widthPx: number): number {
   const chars = Math.max(4, Math.floor((widthPx - 20) / 12.5));
