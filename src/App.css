@@ -33,9 +33,10 @@ body {
   font-family: var(--serif);
 }
 
-/* ─── 手绘感事件卡 ─── */
+/* ─── 手绘感事件卡 ───
+   注意：不要在 .pencil-card 上设置 position——时间轴卡片依赖 Tailwind `absolute` 类定位，
+   后加载的 position:relative 会覆盖它，导致卡片退回文档流堆叠（历史事故） */
 .pencil-card {
-  position: relative;
   background: rgba(255, 255, 255, 0.55);
   border: 1.5px solid var(--graphite);
   /* 手绘盒：四角不对称半径 */
@@ -138,6 +139,31 @@ body {
   );
   opacity: 0.5;
   border-radius: 2px;
+}
+
+/* ─── 真实年代标记：色条 / 时间钉 / 偏移连线 ─── */
+.true-rail {
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  opacity: 0.85;
+  z-index: 1;
+}
+.true-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  border-radius: 1px;
+  z-index: 1;
+}
+.true-link {
+  position: absolute;
+  left: 3px;
+  width: 1px;
+  background: var(--graphite);
+  opacity: 0.35;
+  z-index: 1;
 }
 
 /* ─── 方法卷：切片尺 ─── */

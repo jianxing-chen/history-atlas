@@ -8,11 +8,11 @@ interface Seg {
 }
 
 const SEGS: Seg[] = [
-  { from: -2000000, to: -12000, px: 520, tick: 400000 },
-  { from: -12000, to: -2070, px: 760, tick: 2000 },
-  { from: -2070, to: -221, px: 840, tick: 500 },
-  { from: -221, to: 1912, px: 1720, tick: 400 },
-  { from: 1912, to: 2027, px: 660, tick: 20 },
+  { from: -2000000, to: -12000, px: 660, tick: 400000 },
+  { from: -12000, to: -2070, px: 780, tick: 2000 },
+  { from: -2070, to: -221, px: 900, tick: 500 },
+  { from: -221, to: 1912, px: 2080, tick: 400 },
+  { from: 1912, to: 2027, px: 720, tick: 20 },
 ];
 
 interface Span {

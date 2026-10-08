@@ -15,6 +15,7 @@ interface Placed {
   ev: WEvent;
   top: number;
   h: number;
+  trueTop: number;
 }
 
 function layoutEvents(events: WEvent[]): Placed[] {
@@ -25,7 +26,7 @@ function layoutEvents(events: WEvent[]): Placed[] {
     const top = Math.max(want, cursor + 6);
     const h = estHeight(ev, COL_W);
     cursor = top + h;
-    return { ev, top, h };
+    return { ev, top, h, trueTop: want };
   });
 }
 
@@ -42,6 +43,13 @@ export default function World() {
     []
   );
   const allTicks = useMemo(() => ticks(), []);
+  const boardH = useMemo(() => {
+    let m = H + 40;
+    for (const { items } of placedByRegion) {
+      for (const p of items) m = Math.max(m, p.top + p.h + 30);
+    }
+    return m;
+  }, [placedByRegion, H]);
   const GRID = `64px 28px repeat(${REGIONS.length}, 1fr)`;
 
   return (
@@ -108,7 +116,7 @@ export default function World() {
           </div>
 
           {/* 板体 */}
-          <div className="relative grid" style={{ gridTemplateColumns: GRID, height: H + 40 }}>
+          <div className="relative grid" style={{ gridTemplateColumns: GRID, height: boardH }}>
             {/* 时代横带（贯穿全宽） */}
             <div className="pointer-events-none absolute inset-0 z-0">
               {BANDS.map((b) => {
@@ -165,19 +173,31 @@ export default function World() {
             {/* 地区列 */}
             {placedByRegion.map(({ region, items }) => (
               <div key={region.id} className="region-col relative z-10 px-2">
-                {items.map(({ ev, top }) => {
+                {items.map(({ ev, top, trueTop }) => {
                   const key = region.id + ":" + ev.y + ev.t;
                   const active = sel?.ev === ev;
+                  const drift = top - trueTop;
                   return (
-                    <div
-                      key={key}
-                      className={"pencil-card absolute left-2 right-2" + (active ? " is-active" : "")}
-                      style={{ top }}
-                      onClick={() => setSel(active ? null : { ev, region })}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && setSel({ ev, region })}
-                    >
+                    <div key={key}>
+                      {/* 时间钉：标记真实年份位置 */}
+                      <div
+                        className="true-dot"
+                        style={{ top: trueTop - 3, left: 0, background: region.pigment }}
+                      />
+                      {drift > 5 && (
+                        <div
+                          className="true-link"
+                          style={{ top: trueTop + 4, height: drift - 5 }}
+                        />
+                      )}
+                      <div
+                        className={"pencil-card absolute left-2 right-2" + (active ? " is-active" : "")}
+                        style={{ top }}
+                        onClick={() => setSel(active ? null : { ev, region })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === "Enter" && setSel({ ev, region })}
+                      >
                       <div
                         className="year-num text-[11px] font-semibold"
                         style={{ color: region.pigment }}
@@ -194,6 +214,7 @@ export default function World() {
                         {ev.star && "★ "}
                         {ev.t}
                       </div>
+                      </div>
                     </div>
                   );
                 })}
@@ -207,7 +228,8 @@ export default function World() {
         横带采用世界通史分期（上古 → 古典/轴心时代 → 中古 → 近代早期 → 近代 → 现当代），而非考古学分期——石
         器/青铜/铁器时代在全球不同步，不宜作统一标尺；该框架源于欧洲史学传统，用于其他地区学界亦有讨论，
         故横带采用主题式命名。时间轴为分段比例（越靠近现代越舒展）；年代以通行世界史年表为准，个别上古纪年各
-        学说略有出入。中国列仅列关键坐标，详见「中国卷」。
+        学说略有出入。中国列仅列关键坐标，详见「中国卷」。事件左侧的菱形钉标记真实年份位置；
+        标签框为避免文字重叠可能略向下偏移，偏移处以细线连回真实位置。
       </footer>
 
       {/* 悬浮详情框 */}
