@@ -1,73 +1,37 @@
-# React + TypeScript + Vite
+# 历史图集
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+把时间画成纸上的长卷：一份彩铅纸面风格的竖版历史时间轴网站。
 
-Currently, two official plugins are available:
+## 三卷
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| 路由 | 内容 |
+| --- | --- |
+| `/` | 图集首页（三卷导览） |
+| `/china` | 中国卷 —— 五种分期体系（考古学 / 文献学 / 朝代 / 社会形态 / 大事记）五泳道竖版对照，远古至当代 |
+| `/world` | 世界卷 —— 六地区列（西亚北非 / 欧洲 / 南亚 / 东亚 / 美洲 / 非洲）竖版对照，公元前 3500 年至今 |
+| `/methods` | 方法卷 —— 历史可以怎么切：六把分期尺（考古学、文献学、王朝、社会形态、全球史、年鉴学派）的适用边界与争议 |
 
-## React Compiler
+数据均为内容驱动的静态条目（`src/data/china.ts`、`src/data/world.ts`），每条含年代区间与点击展开的详细解说。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 开发
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev          # 本地开发服务器
+npm run build        # 生产构建（含 TypeScript 检查）
+npm run check:layout # 布局对齐回归校验
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 布局校验
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+时间轴的排布逻辑集中在 `src/lib/pack.ts`（区间道防碰撞分轨 + 时间点下推），
+页面渲染与校验脚本共用同一份实现。`npm run check:layout` 会对中国卷 4 条区间道、
+大事记、世界卷 6 条地区列做 12 组断言：钉位与时间坐标一致、卡片两两零重叠、
+年份合法、解说齐全。修改数据或布局后请先跑它再提交。
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 设计约定
+
+- 彩铅纸面主题，色板见 `src/App.css`（`--paper` 纸色、`--graphite` 石墨、五色颜料）。
+- `.pencil-card` 上**不可设置 position**（会覆盖 Tailwind 的 absolute，曾造成全局卡片堆叠）。
+- 时间刻度：中国 `src/lib/chinaTime.ts`（五段非线性），世界 `src/lib/time.ts`（七段），
+  负数为公元前。改刻度时同步检查数据是否越界（check:layout 会兜底）。

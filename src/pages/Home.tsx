@@ -1,6 +1,8 @@
 import { Link } from "react-router";
+import { useTitle } from "@/lib/useTitle";
 
 export default function Home() {
+  useTitle("历史图集 · 纸上长卷里的中国与世界");
   return (
     <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-5 pb-16 pt-14">
       {/* 题签 */}

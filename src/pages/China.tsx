@@ -1,114 +1,11 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router";
 import { CHINA_LANES, type CItem, type CLane } from "@/data/china";
 import { ty, totalHeight, ticks, fmtYear, fmtShort, CHINA_BANDS } from "@/lib/chinaTime";
+import { packSpans, packPoints } from "@/lib/pack";
+import { SiteNav } from "@/components/SiteNav";
+import { useTitle } from "@/lib/useTitle";
 
-const GAP = 5;
 const COL_W = 200;
-
-/* 标题按可用宽度折行估算 */
-function estLines(text: string, widthPx: number): number {
-  const chars = Math.max(4, Math.floor((widthPx - 20) / 12.5));
-  return Math.ceil(text.length / chars);
-}
-
-interface PlacedSpan {
-  it: CItem;
-  top: number;
-  height: number;
-  railTop: number; // 真实起点（不做防碰撞推移）
-  railH: number; // 真实跨度
-  leftPct: number;
-  widthPct: number;
-}
-interface PlacedPoint {
-  it: CItem;
-  top: number;
-  trueTop: number; // 真实年份位置
-  h: number; // 估算高度
-}
-
-/* 区间条：重叠条目分到子轨；同簇等宽；全列统一纵向防碰撞 */
-function packSpans(items: CItem[]): PlacedSpan[] {
-  const sorted = [...items].sort((a, b) => a.s - b.s || a.e - b.e);
-  interface P {
-    it: CItem;
-    track: number;
-  }
-  const clusters: P[][] = [];
-  let cur: P[] = [];
-  let curEnd = -Infinity;
-  let ends: number[] = [];
-  for (const it of sorted) {
-    if (it.s >= curEnd && cur.length > 0) {
-      clusters.push(cur);
-      cur = [];
-      curEnd = it.e;
-      ends = [];
-    } else {
-      curEnd = Math.max(curEnd, it.e);
-    }
-    let t = ends.findIndex((e) => it.s >= e);
-    if (t < 0) {
-      ends.push(it.e);
-      t = ends.length - 1;
-    } else {
-      ends[t] = it.e;
-    }
-    cur.push({ it, track: t });
-  }
-  if (cur.length) clusters.push(cur);
-
-  const out: PlacedSpan[] = [];
-  /* 占用记录：按实际横向区间防碰撞（跨簇、不同分栏数都安全） */
-  interface Occ {
-    bottom: number;
-    L: number;
-    R: number;
-  }
-  const occ: Occ[] = [];
-  for (const c of clusters) {
-    const k = Math.max(...c.map((x) => x.track)) + 1;
-    const wPx = (COL_W - 16) / k;
-    for (const { it, track } of c) {
-      const want = ty(it.s);
-      const spanH = ty(it.e) - want;
-      const showYear = spanH >= 56;
-      const est = 10 + estLines(it.n, wPx) * 16 + (showYear ? 13 : 0) + 6;
-      const h = Math.max(spanH, est);
-      const L = track / k;
-      const R = L + 1 / k;
-      let prev = -Infinity;
-      for (const o of occ) {
-        if (o.L < R - 0.001 && L < o.R - 0.001 && o.bottom > prev) prev = o.bottom;
-      }
-      const top = Math.max(want, prev + GAP);
-      occ.push({ bottom: top + h, L, R });
-      out.push({
-        it,
-        top,
-        height: h,
-        railTop: want,
-        railH: Math.max(spanH, 2),
-        leftPct: (track / k) * 100,
-        widthPct: 100 / k,
-      });
-    }
-  }
-  return out;
-}
-
-function packPoints(items: CItem[]): PlacedPoint[] {
-  const sorted = [...items].sort((a, b) => a.s - b.s);
-  let cursor = -Infinity;
-  return sorted.map((it) => {
-    const trueTop = ty(it.s);
-    const top = Math.max(trueTop, cursor + GAP);
-    const h = 14 + 13 + estLines(it.n, COL_W - 16) * 16 + 6;
-    cursor = top + h;
-    return { it, top, trueTop, h };
-  });
-}
 
 interface Sel {
   it: CItem;
@@ -116,14 +13,15 @@ interface Sel {
 }
 
 export default function China() {
+  useTitle("中国卷 · 历史图集");
   const H = totalHeight();
   const [sel, setSel] = useState<Sel | null>(null);
   const lanes = useMemo(
     () =>
       CHINA_LANES.map((lane) => ({
         lane,
-        spans: lane.kind === "span" ? packSpans(lane.items) : null,
-        points: lane.kind === "point" ? packPoints(lane.items) : null,
+        spans: lane.kind === "span" ? packSpans(lane.items, ty, COL_W) : null,
+        points: lane.kind === "point" ? packPoints(lane.items, ty, COL_W) : null,
       })),
     []
   );
@@ -147,38 +45,7 @@ export default function China() {
 
   return (
     <div className="min-h-screen">
-      {/* 站点导航 */}
-      <header className="mx-auto flex max-w-[1400px] items-baseline gap-5 px-5 pb-3 pt-6">
-        <span className="font-serif-cjk text-2xl font-semibold tracking-wide">
-          历史图集
-        </span>
-        <nav className="flex items-baseline gap-4 text-sm">
-          <Link
-            to="/"
-            className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
-          >
-            图集首页
-          </Link>
-          <span className="font-medium underline decoration-2 underline-offset-4">
-            中国卷
-          </span>
-          <Link
-            to="/world"
-            className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
-          >
-            世界卷
-          </Link>
-          <Link
-            to="/methods"
-            className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
-          >
-            方法卷
-          </Link>
-        </nav>
-        <span className="ml-auto hidden text-xs text-[color:var(--graphite-faint)] sm:block">
-          竖版 · 五种分期体系对照 · 点击条目看详细解说
-        </span>
-      </header>
+      <SiteNav active="china" note="竖版 · 五种分期体系对照 · 点击条目看详细解说" />
       <hr className="pencil-rule mx-auto max-w-[1400px]" />
 
       <main className="mx-auto max-w-[1400px] overflow-x-auto px-3 pb-24 pt-4">

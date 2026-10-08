@@ -1,33 +1,22 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router";
 import { REGIONS, BANDS, type WEvent, type Region } from "@/data/world";
 import { ty, totalHeight, ticks, fmtYear } from "@/lib/time";
+import { packPoints } from "@/lib/pack";
+import { SiteNav } from "@/components/SiteNav";
+import { useTitle } from "@/lib/useTitle";
 
-/* 按估算高度做纵向防碰撞（标题按列宽折行估算） */
-function estHeight(ev: WEvent, colW: number): number {
-  const chars = Math.max(6, Math.floor((colW - 26) / 13));
-  const lines = Math.ceil(ev.t.length / chars);
-  return 16 + 14 + lines * 17 + 6;
-}
 const COL_W = 210;
 
-interface Placed {
-  ev: WEvent;
-  top: number;
-  h: number;
-  trueTop: number;
-}
-
-function layoutEvents(events: WEvent[]): Placed[] {
-  const sorted = [...events].sort((a, b) => a.y - b.y);
-  let cursor = -Infinity;
-  return sorted.map((ev) => {
-    const want = ty(ev.y);
-    const top = Math.max(want, cursor + 6);
-    const h = estHeight(ev, COL_W);
-    cursor = top + h;
-    return { ev, top, h, trueTop: want };
-  });
+/* 世界事件按节点卡布局：时间钉在真实位置，标签卡防碰撞下推 */
+type EvItem = WEvent & { n: string; s: number; e: number };
+function layoutEvents(events: WEvent[]) {
+  const items: EvItem[] = events.map((ev) => ({ ...ev, n: ev.t, s: ev.y, e: ev.y }));
+  return packPoints(items, ty, COL_W).map((p) => ({
+    ev: p.it,
+    top: p.top,
+    h: p.h,
+    trueTop: p.trueTop,
+  }));
 }
 
 interface Sel {
@@ -36,6 +25,7 @@ interface Sel {
 }
 
 export default function World() {
+  useTitle("世界卷 · 历史图集");
   const H = totalHeight();
   const [sel, setSel] = useState<Sel | null>(null);
   const placedByRegion = useMemo(
@@ -54,38 +44,7 @@ export default function World() {
 
   return (
     <div className="min-h-screen">
-      {/* 站点导航 */}
-      <header className="mx-auto flex max-w-[1400px] items-baseline gap-5 px-5 pb-3 pt-6">
-        <span className="font-serif-cjk text-2xl font-semibold tracking-wide">
-          历史图集
-        </span>
-        <nav className="flex items-baseline gap-4 text-sm">
-          <Link
-            to="/"
-            className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
-          >
-            图集首页
-          </Link>
-          <Link
-            to="/china"
-            className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
-          >
-            中国卷
-          </Link>
-          <span className="font-medium underline decoration-2 underline-offset-4">
-            世界卷
-          </span>
-          <Link
-            to="/methods"
-            className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
-          >
-            方法卷
-          </Link>
-        </nav>
-        <span className="ml-auto hidden text-xs text-[color:var(--graphite-faint)] sm:block">
-          竖版 · 六地区对照 · 点击事件看详细解说
-        </span>
-      </header>
+      <SiteNav active="world" note="竖版 · 六地区对照 · 点击事件看详细解说" />
       <hr className="pencil-rule mx-auto max-w-[1400px]" />
 
       <main className="mx-auto max-w-[1400px] overflow-x-auto px-3 pb-24 pt-4">

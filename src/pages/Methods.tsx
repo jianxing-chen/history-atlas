@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router";
 import { ty, totalHeight, fmtShort } from "@/lib/chinaTime";
+import { SiteNav } from "@/components/SiteNav";
+import { useTitle } from "@/lib/useTitle";
 
 interface Slice {
   n: string;
@@ -139,6 +140,7 @@ const CRITERIA = [
 ];
 
 export default function Methods() {
+  useTitle("方法卷 · 历史图集");
   const TOTAL = totalHeight();
   const [active, setActive] = useState<string | null>(null);
 
@@ -163,24 +165,7 @@ export default function Methods() {
 
   return (
     <div className="min-h-screen">
-      {/* 站点导航 */}
-      <header className="mx-auto flex max-w-[1400px] items-baseline gap-5 px-5 pb-3 pt-6">
-        <span className="font-serif-cjk text-2xl font-semibold tracking-wide">
-          历史图集
-        </span>
-        <nav className="flex items-baseline gap-4 text-sm">
-          <Link to="/" className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline">
-            图集首页
-          </Link>
-          <Link to="/china" className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline">
-            中国卷
-          </Link>
-          <Link to="/world" className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline">
-            世界卷
-          </Link>
-          <span className="font-medium underline decoration-2 underline-offset-4">方法卷</span>
-        </nav>
-      </header>
+      <SiteNav active="methods" note="历史可以怎么切 · 六把尺对照" />
       <hr className="pencil-rule mx-auto max-w-[1400px]" />
 
       {/* 命题 */}
