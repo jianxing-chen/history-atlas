@@ -21,24 +21,19 @@ export default function Home() {
 
       {/* 两卷 */}
       <div className="mt-12 grid gap-8 sm:grid-cols-2">
-        <a
-          href="./china-timeline.html"
-          target="_blank"
-          rel="noreferrer"
-          className="volume-card block p-6 no-underline"
-        >
-          <div className="text-xs tracking-widest text-[#b4574a]">卷一 · 横版五泳道</div>
+        <Link to="/china" className="volume-card block p-6 no-underline">
+          <div className="text-xs tracking-widest text-[#b4574a]">卷一 · 竖版五体系</div>
           <div className="font-serif-cjk mt-2 text-3xl font-semibold text-[color:var(--graphite)]">
             中国卷
           </div>
           <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--graphite-soft)]">
             从泥河湾、元谋人到今天：考古学时代 / 史学划分 / 朝代更迭 / 遗址文化 / 大事记
-            五条泳道并排，五种分期体系互相对照。可缩放、可跳转、可点开详情。
+            五列并排，五种分期体系互相对照；并立政权自动分栏，点开看详情。
           </p>
           <div className="mt-4 text-xs text-[color:var(--graphite-faint)]">
-            旧石器时代 — 今 · 160+ 条目 ↗
+            旧石器时代 — 今 · 160+ 条目 →
           </div>
-        </a>
+        </Link>
 
         <Link to="/world" className="volume-card block p-6 no-underline">
           <div className="text-xs tracking-widest text-[#4a6d9c]">卷二 · 竖版五地区</div>

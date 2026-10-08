@@ -55,14 +55,12 @@ export default function World() {
           <span className="font-medium underline underline-offset-4 decoration-2">
             世界卷
           </span>
-          <a
-            href="./china-timeline.html"
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            to="/china"
             className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
           >
-            中国卷 ↗
-          </a>
+            中国卷
+          </Link>
         </nav>
         <span className="ml-auto hidden text-xs text-[color:var(--graphite-faint)] sm:block">
           竖版 · 五地区对照 · 点击卡片展开说明
