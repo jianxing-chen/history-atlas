@@ -24,6 +24,12 @@ export interface PlacedPoint<T extends SpanItem = SpanItem> {
   h: number;
 }
 
+export interface PlacedPointTrack<T extends SpanItem = SpanItem>
+  extends PlacedPoint<T> {
+  track: number;
+  trackCount: number;
+}
+
 export const GAP = 5;
 
 /* 标题按可用宽度折行估算（CJK 按 12.5px/字） */
@@ -119,6 +125,33 @@ export function packPoints<T extends SpanItem>(
     const h = 14 + 13 + estLines(it.n, colW - 16) * 16 + 6;
     cursor = top + h;
     return { it, top, trueTop, h };
+  });
+}
+
+/* 节点卡（多股道版）：同列分若干股道，选推移最小的一股，减少标签离真实年份的漂移 */
+export function packPointsTracked<T extends SpanItem>(
+  items: T[],
+  ty: (year: number) => number,
+  colW: number,
+  tracks = 2
+): PlacedPointTrack<T>[] {
+  const sorted = [...items].sort((a, b) => a.s - b.s);
+  const trackW = (colW - 16) / tracks - 6;
+  const cursors = new Array<number>(tracks).fill(-Infinity);
+  return sorted.map((it) => {
+    const trueTop = ty(it.s);
+    const h = 14 + 13 + estLines(it.n, trackW) * 16 + 6;
+    let best = 0;
+    let bestTop = Infinity;
+    for (let t = 0; t < tracks; t++) {
+      const top = Math.max(trueTop, cursors[t] + GAP);
+      if (top < bestTop) {
+        bestTop = top;
+        best = t;
+      }
+    }
+    cursors[best] = bestTop + h;
+    return { it, top: bestTop, trueTop, h, track: best, trackCount: tracks };
   });
 }
 

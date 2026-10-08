@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { CHINA_LANES, type CItem, type CLane } from "@/data/china";
 import { ty, totalHeight, ticks, fmtYear, fmtShort, CHINA_BANDS } from "@/lib/chinaTime";
-import { packSpans, packPoints } from "@/lib/pack";
+import { packSpans, packPointsTracked } from "@/lib/pack";
 import { SiteNav } from "@/components/SiteNav";
 import { useTitle } from "@/lib/useTitle";
 
@@ -21,7 +21,7 @@ export default function China() {
       CHINA_LANES.map((lane) => ({
         lane,
         spans: lane.kind === "span" ? packSpans(lane.items, ty, COL_W) : null,
-        points: lane.kind === "point" ? packPoints(lane.items, ty, COL_W) : null,
+        points: lane.kind === "point" ? packPointsTracked(lane.items, ty, COL_W) : null,
       })),
     []
   );
@@ -194,31 +194,42 @@ export default function China() {
                   const key = lane.id + ":" + p.it.n;
                   const active = sel?.it === p.it;
                   const drift = p.top - p.trueTop;
+                  const lanePct = 100 / p.trackCount;
+                  const trackLeft = `calc(${p.track * lanePct}% + ${p.track === 0 ? 0 : 3}px)`;
                   return (
                     <div key={key}>
-                      {/* 时间钉：标记真实年份位置 */}
+                      {/* 时间钉：标记真实年份位置（随股道横移） */}
                       <div
                         className="true-dot"
-                        style={{ top: p.trueTop - 3, left: 0, background: lane.pigment }}
+                        style={{
+                          top: p.trueTop - 3,
+                          left: `calc(${p.track * lanePct}% - 2px)`,
+                          background: lane.pigment,
+                        }}
                       />
                       {drift > 5 && (
                         <div
                           className="true-link"
-                          style={{ top: p.trueTop + 4, height: drift - 5 }}
+                          style={{
+                            top: p.trueTop + 4,
+                            height: drift - 5,
+                            left: `calc(${p.track * lanePct}% + 1px)`,
+                          }}
                         />
                       )}
                       <div
-                        className={"pencil-card absolute left-2 right-2" + (active ? " is-active" : "")}
-                        style={{ top: p.top }}
+                        className={"pencil-card absolute" + (active ? " is-active" : "")}
+                        style={{ top: p.top, left: trackLeft, width: `calc(${lanePct}% - 6px)` }}
                         onClick={() => setSel(active ? null : { it: p.it, lane })}
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => e.key === "Enter" && setSel({ it: p.it, lane })}
+                        title={p.it.n}
                       >
                         <div className="year-num text-[11px] font-semibold" style={{ color: lane.pigment }}>
                           {fmtYear(p.it.s)} 年
                         </div>
-                        <div className="truncate text-[12px] font-medium leading-tight" title={p.it.n}>
+                        <div className="text-[12px] font-medium leading-tight">
                           {p.it.n}
                         </div>
                       </div>
