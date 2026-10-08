@@ -18,9 +18,18 @@
 ```bash
 npm install
 npm run dev          # 本地开发服务器
-npm run build        # 生产构建（含 TypeScript 检查）
+npm run build        # 生产构建（含 TypeScript 检查，postbuild 自动生成 404.html）
 npm run check:layout # 布局对齐回归校验
 ```
+
+## 部署
+
+站点发布在 GitHub Pages：**https://jianxing-chen.github.io/history-atlas/**。
+
+- 推送到 `main` 即自动经 GitHub Actions 构建部署（`.github/workflows/deploy.yml`）。
+- `vite.config.ts` 的 `base` 与 `src/main.tsx` 的 `BrowserRouter basename`
+  均取 `/history-atlas/`；仓库若改名，请同步修改这两处。
+- 构建时把 `index.html` 复制为 `404.html`，使 `/china` 等深链在 Pages 上刷新可用。
 
 ## 布局校验
 
