@@ -1,11 +1,16 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { CHINA_LANES, type CItem } from "@/data/china";
+import { CHINA_LANES, type CItem, type CLane } from "@/data/china";
 import { ty, totalHeight, ticks, fmtYear, fmtShort, CHINA_BANDS } from "@/lib/chinaTime";
 
-const MIN_H = 30; // 区间条最小高度
-const GAP = 5; // 同轨纵向最小间距
-const POINT_GAP = 52; // 大事记卡片最小间距
+const GAP = 5;
+const COL_W = 200;
+
+/* 标题按可用宽度折行估算 */
+function estLines(text: string, widthPx: number): number {
+  const chars = Math.max(4, Math.floor((widthPx - 20) / 12.5));
+  return Math.ceil(text.length / chars);
+}
 
 interface PlacedSpan {
   it: CItem;
@@ -19,21 +24,21 @@ interface PlacedPoint {
   top: number;
 }
 
-/* 区间图着色：重叠的条目分到不同子轨，同一"重叠簇"内等宽 */
+/* 区间条：重叠条目分到子轨；同簇等宽；全列统一纵向防碰撞 */
 function packSpans(items: CItem[]): PlacedSpan[] {
   const sorted = [...items].sort((a, b) => a.s - b.s || a.e - b.e);
   interface P {
     it: CItem;
     track: number;
   }
-  const clusters: { items: P[] }[] = [];
-  let cur: { items: P[] } | null = null;
+  const clusters: P[][] = [];
+  let cur: P[] = [];
   let curEnd = -Infinity;
   let ends: number[] = [];
   for (const it of sorted) {
-    if (!cur || it.s >= curEnd) {
-      cur = { items: [] };
+    if (it.s >= curEnd && cur.length > 0) {
       clusters.push(cur);
+      cur = [];
       curEnd = it.e;
       ends = [];
     } else {
@@ -46,21 +51,24 @@ function packSpans(items: CItem[]): PlacedSpan[] {
     } else {
       ends[t] = it.e;
     }
-    cur.items.push({ it, track: t });
+    cur.push({ it, track: t });
   }
+  if (cur.length) clusters.push(cur);
+
   const out: PlacedSpan[] = [];
+  const trackBottom = new Map<number, number>(); // 跨簇延续，防止上下两簇相叠
   for (const c of clusters) {
-    const k = Math.max(...c.items.map((x) => x.track)) + 1;
-    // 每个子轨独立做纵向防碰撞下推
-    const byTrack = new Map<number, number>(); // track -> 当前已占到的底部
-    for (const { it, track } of c.items
-      .slice()
-      .sort((a, b) => a.it.s - b.it.s)) {
+    const k = Math.max(...c.map((x) => x.track)) + 1;
+    const wPx = (COL_W - 16) / k;
+    for (const { it, track } of c) {
       const want = ty(it.s);
-      const h = Math.max(ty(it.e) - want, MIN_H);
-      const prevBottom = byTrack.get(track) ?? -Infinity;
-      const top = Math.max(want, prevBottom + GAP);
-      byTrack.set(track, top + h);
+      const spanH = ty(it.e) - want;
+      const showYear = spanH >= 56;
+      const est = 10 + estLines(it.n, wPx) * 16 + (showYear ? 13 : 0) + 6;
+      const h = Math.max(spanH, est);
+      const prev = trackBottom.get(track) ?? -Infinity;
+      const top = Math.max(want, prev + GAP);
+      trackBottom.set(track, top + h);
       out.push({
         it,
         top,
@@ -77,15 +85,21 @@ function packPoints(items: CItem[]): PlacedPoint[] {
   const sorted = [...items].sort((a, b) => a.s - b.s);
   let cursor = -Infinity;
   return sorted.map((it) => {
-    const top = Math.max(ty(it.s), cursor + POINT_GAP);
-    cursor = top;
+    const top = Math.max(ty(it.s), cursor + GAP);
+    const h = 14 + 13 + estLines(it.n, COL_W - 16) * 16 + 6;
+    cursor = top + h;
     return { it, top };
   });
 }
 
+interface Sel {
+  it: CItem;
+  lane: CLane;
+}
+
 export default function China() {
   const H = totalHeight();
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [sel, setSel] = useState<Sel | null>(null);
   const lanes = useMemo(
     () =>
       CHINA_LANES.map((lane) => ({
@@ -96,42 +110,18 @@ export default function China() {
     []
   );
   const allTicks = useMemo(() => ticks(), []);
+  const GRID = `64px 28px repeat(${CHINA_LANES.length}, 1fr)`;
 
-  const toggle = (key: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-
-  const descOf = (it: CItem, pigment: string, key: string) => {
-    const open = expanded.has(key);
-    return (
-      <>
-        {open && (
-          <div className="mt-1 border-t border-dashed border-[color:var(--line)] pt-1 text-[12px] leading-relaxed text-[color:var(--graphite-soft)]">
-            <span className="year-num" style={{ color: pigment }}>
-              {fmtYear(it.s)}
-              {it.e !== it.s && ` — ${fmtYear(it.e)}`}
-            </span>
-            <br />
-            {it.d}
-            {it.note && (
-              <span className="mt-1 inline-block rounded border border-[#b06a4f] px-1 text-[11px] text-[#b06a4f]">
-                ⚠ {it.note}
-              </span>
-            )}
-          </div>
-        )}
-      </>
-    );
+  const duration = (it: CItem) => {
+    if (it.s === it.e) return null;
+    const y = it.e - it.s;
+    return y >= 10000 ? `约 ${Math.round(y / 1000) / 10} 万年` : `约 ${y} 年`;
   };
 
   return (
     <div className="min-h-screen">
       {/* 站点导航 */}
-      <header className="mx-auto flex max-w-6xl items-baseline gap-5 px-5 pb-3 pt-6">
+      <header className="mx-auto flex max-w-[1400px] items-baseline gap-5 px-5 pb-3 pt-6">
         <span className="font-serif-cjk text-2xl font-semibold tracking-wide">
           历史图集
         </span>
@@ -153,21 +143,22 @@ export default function China() {
           </Link>
         </nav>
         <span className="ml-auto hidden text-xs text-[color:var(--graphite-faint)] sm:block">
-          竖版 · 五种分期体系对照 · 点击条目展开说明
+          竖版 · 五种分期体系对照 · 点击条目看详细解说
         </span>
       </header>
-      <hr className="pencil-rule mx-auto max-w-6xl" />
+      <hr className="pencil-rule mx-auto max-w-[1400px]" />
 
-      <main className="mx-auto max-w-6xl overflow-x-auto px-3 pb-16 pt-4">
-        <div style={{ minWidth: 76 + CHINA_LANES.length * 200 + "px" }}>
+      <main className="mx-auto max-w-[1400px] overflow-x-auto px-3 pb-24 pt-4">
+        <div style={{ minWidth: 92 + CHINA_LANES.length * COL_W + "px" }}>
           {/* 列头（吸顶） */}
           <div
-            className="sticky top-0 z-20 grid border-b-2 border-[color:var(--graphite)] bg-[color:var(--paper)]"
-            style={{ gridTemplateColumns: `76px repeat(${CHINA_LANES.length}, 1fr)` }}
+            className="sticky top-0 z-30 grid border-b-2 border-[color:var(--graphite)]"
+            style={{ gridTemplateColumns: GRID }}
           >
-            <div />
+            <div className="bg-[color:var(--paper)]" />
+            <div className="bg-[color:var(--paper)]" />
             {CHINA_LANES.map((l) => (
-              <div key={l.id} className="px-3 pb-2 pt-2">
+              <div key={l.id} className="bg-[color:var(--paper)] px-3 pb-2 pt-2">
                 <div className="flex items-center gap-2">
                   <span
                     className="inline-block h-3 w-3 rounded-[3px] border border-[color:var(--graphite)]"
@@ -177,7 +168,7 @@ export default function China() {
                     {l.name}
                   </span>
                 </div>
-                <div className="pl-5 text-[11px] text-[color:var(--graphite-faint)]">
+                <div className="pl-5 text-[10px] text-[color:var(--graphite-faint)]">
                   {l.items.length} 条
                 </div>
               </div>
@@ -185,69 +176,63 @@ export default function China() {
           </div>
 
           {/* 板体 */}
-          <div
-            className="relative grid"
-            style={{
-              gridTemplateColumns: `76px repeat(${CHINA_LANES.length}, 1fr)`,
-              height: H + 40,
-            }}
-          >
+          <div className="relative grid" style={{ gridTemplateColumns: GRID, height: H + 40 }}>
             {/* 时代横带 */}
-            <div className="pointer-events-none absolute inset-0">
-              {CHINA_BANDS.map((b) => {
-                const top = ty(b.from);
-                const bottom = ty(b.to);
-                return (
-                  <div
-                    key={b.name}
-                    className="hatch-band absolute left-0 right-0"
-                    style={{ top, height: bottom - top }}
-                  >
-                    <div
-                      className="pointer-events-auto sticky left-0 inline-block pl-2 pt-2"
-                      style={{ marginLeft: 80 }}
-                    >
-                      <div className="font-serif-cjk text-[13px] font-semibold tracking-widest text-[color:var(--graphite-soft)]">
-                        {b.name}
-                      </div>
-                      <div className="text-[10px] text-[color:var(--graphite-faint)]">
-                        {b.sub}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="pointer-events-none absolute inset-0 z-0">
+              {CHINA_BANDS.map((b) => (
+                <div
+                  key={b.name}
+                  className="hatch-band absolute left-0 right-0"
+                  style={{ top: ty(b.from), height: ty(b.to) - ty(b.from) }}
+                />
+              ))}
             </div>
 
             {/* 时间竖脊 */}
-            <div className="relative">
-              <div className="spine-line" style={{ right: 18 }} />
-              {allTicks.map((tk) => (
-                <div key={tk.y}>
+            <div className="sticky left-0 z-20 bg-[color:var(--paper)]">
+              <div className="relative h-full">
+                <div className="spine-line" style={{ right: 14 }} />
+                {allTicks.map((tk) => (
+                  <div key={tk.y}>
+                    <div className="spine-tick" style={{ top: tk.top, right: 14, width: 7 }} />
+                    <span
+                      className="spine-year absolute text-[10px]"
+                      style={{ top: tk.top - 6, right: 26 }}
+                    >
+                      {fmtShort(tk.y)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 时代竖轨 */}
+            <div className="sticky z-20 bg-[color:var(--paper)]" style={{ left: 64 }}>
+              <div className="relative h-full border-r border-dashed border-[color:var(--line)]">
+                {CHINA_BANDS.map((b) => (
                   <div
-                    className="spine-tick"
-                    style={{ top: tk.top, right: 18, width: 8 }}
-                  />
-                  <span
-                    className="spine-year absolute text-[11px]"
-                    style={{ top: tk.top - 7, right: 32 }}
+                    key={b.name}
+                    className="band-rail-text absolute left-0 right-0 flex items-center justify-center"
+                    style={{ top: ty(b.from), height: ty(b.to) - ty(b.from) }}
+                    title={`${b.name} · ${b.sub}`}
                   >
-                    {fmtShort(tk.y)}
-                  </span>
-                </div>
-              ))}
+                    <span>{b.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* 五列 */}
             {lanes.map(({ lane, spans, points }) => (
-              <div key={lane.id} className="region-col relative px-2">
+              <div key={lane.id} className="region-col relative z-10 px-2">
                 {spans?.map((p) => {
                   const key = lane.id + ":" + p.it.n;
-                  const tall = p.height >= 54;
+                  const active = sel?.it === p.it;
+                  const tall = p.height >= 56;
                   return (
                     <div
                       key={key}
-                      className="pencil-card absolute overflow-hidden"
+                      className={"pencil-card absolute overflow-hidden" + (active ? " is-active" : "")}
                       style={{
                         top: p.top,
                         height: p.height,
@@ -255,10 +240,10 @@ export default function China() {
                         width: `calc(${p.widthPct}% - 4px)`,
                         background: `color-mix(in srgb, ${lane.pigment} ${tall ? 7 : 13}%, rgba(255,255,255,0.55))`,
                       }}
-                      onClick={() => toggle(key)}
+                      onClick={() => setSel(active ? null : { it: p.it, lane })}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && toggle(key)}
+                      onKeyDown={(e) => e.key === "Enter" && setSel({ it: p.it, lane })}
                     >
                       <div className="text-[12px] font-medium leading-tight">
                         {p.it.n}
@@ -268,21 +253,21 @@ export default function China() {
                           {fmtShort(p.it.s)} — {fmtShort(p.it.e)}
                         </div>
                       )}
-                      {descOf(p.it, lane.pigment, key)}
                     </div>
                   );
                 })}
                 {points?.map((p) => {
                   const key = lane.id + ":" + p.it.n;
+                  const active = sel?.it === p.it;
                   return (
                     <div
                       key={key}
-                      className="pencil-card absolute left-2 right-2"
+                      className={"pencil-card absolute left-2 right-2" + (active ? " is-active" : "")}
                       style={{ top: p.top }}
-                      onClick={() => toggle(key)}
+                      onClick={() => setSel(active ? null : { it: p.it, lane })}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && toggle(key)}
+                      onKeyDown={(e) => e.key === "Enter" && setSel({ it: p.it, lane })}
                     >
                       <div className="year-num text-[11px] font-semibold" style={{ color: lane.pigment }}>
                         {fmtYear(p.it.s)} 年
@@ -290,7 +275,6 @@ export default function China() {
                       <div className="text-[12px] font-medium leading-tight">
                         {p.it.n}
                       </div>
-                      {descOf(p.it, lane.pigment, key)}
                     </div>
                   );
                 })}
@@ -300,10 +284,48 @@ export default function China() {
         </div>
       </main>
 
-      <footer className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-[color:var(--graphite-faint)]">
+      <footer className="mx-auto max-w-[1400px] px-5 pb-10 text-xs leading-relaxed text-[color:var(--graphite-faint)]">
         年代依据夏商周断代工程（2000）、中华文明探源工程及公开碳十四测年数据；标「存争议」者学界尚无定论。
         并立的政权与体系（如东晋/十六国、辽/宋/西夏/金）在同一列内自动分栏。
       </footer>
+
+      {/* 悬浮详情框 */}
+      {sel && (
+        <aside className="detail-float" role="dialog" aria-label="条目详情">
+          <button
+            className="detail-close"
+            aria-label="关闭"
+            onClick={() => setSel(null)}
+          >
+            ×
+          </button>
+          <div className="flex items-center gap-2 text-[11px] tracking-widest" style={{ color: sel.lane.pigment }}>
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[color:var(--graphite)]"
+              style={{ background: sel.lane.pigment }}
+            />
+            {sel.lane.name}
+            {duration(sel.it) && (
+              <span className="text-[color:var(--graphite-faint)]">· {duration(sel.it)}</span>
+            )}
+          </div>
+          <div className="font-serif-cjk mt-1.5 text-lg font-semibold leading-snug">
+            {sel.it.n}
+          </div>
+          <div className="year-num mt-1 text-[12px]" style={{ color: sel.lane.pigment }}>
+            {fmtYear(sel.it.s)}
+            {sel.it.e !== sel.it.s && ` — ${fmtYear(sel.it.e)}`}
+          </div>
+          <p className="mt-2 text-[13px] leading-relaxed text-[color:var(--graphite-soft)]">
+            {sel.it.d}
+          </p>
+          {sel.it.note && (
+            <div className="mt-2 inline-block rounded border border-[#b06a4f] px-1.5 py-0.5 text-[11px] text-[#b06a4f]">
+              ⚠ {sel.it.note}
+            </div>
+          )}
+        </aside>
+      )}
     </div>
   );
 }

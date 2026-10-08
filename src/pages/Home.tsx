@@ -36,16 +36,16 @@ export default function Home() {
         </Link>
 
         <Link to="/world" className="volume-card block p-6 no-underline">
-          <div className="text-xs tracking-widest text-[#4a6d9c]">卷二 · 竖版五地区</div>
+          <div className="text-xs tracking-widest text-[#4a6d9c]">卷二 · 竖版六地区</div>
           <div className="font-serif-cjk mt-2 text-3xl font-semibold text-[color:var(--graphite)]">
             世界卷
           </div>
           <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--graphite-soft)]">
-            时间竖直流下，中国 / 两河·埃及 / 印度 / 欧洲 / 美洲·非洲 五列并排：
-            二里头与汉谟拉比、秦统一与亚历山大、郑和与哥伦布，一眼对齐。
+            时间竖直流下，中国 / 两河·埃及·中东 / 印度 / 欧洲 / 东亚·东南亚 / 美洲·非洲 六列并排：
+            二里头与汉谟拉比、秦统一与亚历山大、郑和与哥伦布，一眼对齐；点击事件看详细解说。
           </p>
           <div className="mt-4 text-xs text-[color:var(--graphite-faint)]">
-            前 3500 — 今 · 80+ 节点 →
+            前 3500 — 今 · 130+ 节点 →
           </div>
         </Link>
       </div>

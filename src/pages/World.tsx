@@ -1,13 +1,20 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { REGIONS, BANDS, type WEvent } from "@/data/world";
+import { REGIONS, BANDS, type WEvent, type Region } from "@/data/world";
 import { ty, totalHeight, ticks, fmtYear } from "@/lib/time";
 
-const MIN_GAP = 52; // 卡片最小纵向间距
+/* 按估算高度做纵向防碰撞（标题按列宽折行估算） */
+function estHeight(ev: WEvent, colW: number): number {
+  const chars = Math.max(6, Math.floor((colW - 26) / 13));
+  const lines = Math.ceil(ev.t.length / chars);
+  return 16 + 14 + lines * 17 + 6;
+}
+const COL_W = 210;
 
 interface Placed {
   ev: WEvent;
   top: number;
+  h: number;
 }
 
 function layoutEvents(events: WEvent[]): Placed[] {
@@ -15,33 +22,32 @@ function layoutEvents(events: WEvent[]): Placed[] {
   let cursor = -Infinity;
   return sorted.map((ev) => {
     const want = ty(ev.y);
-    const top = Math.max(want, cursor + MIN_GAP);
-    cursor = top;
-    return { ev, top };
+    const top = Math.max(want, cursor + 6);
+    const h = estHeight(ev, COL_W);
+    cursor = top + h;
+    return { ev, top, h };
   });
+}
+
+interface Sel {
+  ev: WEvent;
+  region: Region;
 }
 
 export default function World() {
   const H = totalHeight();
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [sel, setSel] = useState<Sel | null>(null);
   const placedByRegion = useMemo(
     () => REGIONS.map((r) => ({ region: r, items: layoutEvents(r.events) })),
     []
   );
   const allTicks = useMemo(() => ticks(), []);
-
-  const toggle = (key: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+  const GRID = `64px 28px repeat(${REGIONS.length}, 1fr)`;
 
   return (
     <div className="min-h-screen">
       {/* 站点导航 */}
-      <header className="mx-auto flex max-w-6xl items-baseline gap-5 px-5 pb-3 pt-6">
+      <header className="mx-auto flex max-w-[1400px] items-baseline gap-5 px-5 pb-3 pt-6">
         <span className="font-serif-cjk text-2xl font-semibold tracking-wide">
           历史图集
         </span>
@@ -52,43 +58,43 @@ export default function World() {
           >
             图集首页
           </Link>
-          <span className="font-medium underline underline-offset-4 decoration-2">
-            世界卷
-          </span>
           <Link
             to="/china"
             className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
           >
             中国卷
           </Link>
+          <span className="font-medium underline decoration-2 underline-offset-4">
+            世界卷
+          </span>
         </nav>
         <span className="ml-auto hidden text-xs text-[color:var(--graphite-faint)] sm:block">
-          竖版 · 五地区对照 · 点击卡片展开说明
+          竖版 · 六地区对照 · 点击事件看详细解说
         </span>
       </header>
-      <hr className="pencil-rule mx-auto max-w-6xl" />
+      <hr className="pencil-rule mx-auto max-w-[1400px]" />
 
-      {/* 时间轴板 */}
-      <main className="mx-auto max-w-6xl overflow-x-auto px-3 pb-16 pt-4">
-        <div style={{ minWidth: 76 + REGIONS.length * 200 + "px" }}>
-          {/* 地区列头（吸顶） */}
+      <main className="mx-auto max-w-[1400px] overflow-x-auto px-3 pb-24 pt-4">
+        <div style={{ minWidth: 92 + REGIONS.length * COL_W + "px" }}>
+          {/* 列头（吸顶） */}
           <div
-            className="sticky top-0 z-20 grid border-b-2 border-[color:var(--graphite)] bg-[color:var(--paper)]"
-            style={{ gridTemplateColumns: `76px repeat(${REGIONS.length}, 1fr)` }}
+            className="sticky top-0 z-30 grid border-b-2 border-[color:var(--graphite)]"
+            style={{ gridTemplateColumns: GRID }}
           >
-            <div />
+            <div className="bg-[color:var(--paper)]" />
+            <div className="bg-[color:var(--paper)]" />
             {REGIONS.map((r) => (
-              <div key={r.id} className="px-3 pb-2 pt-2">
+              <div key={r.id} className="bg-[color:var(--paper)] px-3 pb-2 pt-2">
                 <div className="flex items-center gap-2">
                   <span
                     className="inline-block h-3 w-3 rounded-[3px] border border-[color:var(--graphite)]"
                     style={{ background: r.pigment }}
                   />
-                  <span className="font-serif-cjk text-lg font-semibold">
+                  <span className="font-serif-cjk text-base font-semibold">
                     {r.name}
                   </span>
                 </div>
-                <div className="pl-5 text-[11px] italic text-[color:var(--graphite-faint)]">
+                <div className="pl-5 text-[10px] italic text-[color:var(--graphite-faint)]">
                   {r.en}
                 </div>
               </div>
@@ -96,15 +102,9 @@ export default function World() {
           </div>
 
           {/* 板体 */}
-          <div
-            className="relative grid"
-            style={{
-              gridTemplateColumns: `76px repeat(${REGIONS.length}, 1fr)`,
-              height: H + 40,
-            }}
-          >
-            {/* 时代横带（贯穿所有列） */}
-            <div className="pointer-events-none absolute inset-0">
+          <div className="relative grid" style={{ gridTemplateColumns: GRID, height: H + 40 }}>
+            {/* 时代横带（贯穿全宽） */}
+            <div className="pointer-events-none absolute inset-0 z-0">
               {BANDS.map((b) => {
                 const top = ty(b.from);
                 const bottom = ty(b.to);
@@ -113,57 +113,64 @@ export default function World() {
                     key={b.name}
                     className="hatch-band absolute left-0 right-0"
                     style={{ top, height: bottom - top }}
-                  >
-                    <div
-                      className="pointer-events-auto sticky left-0 inline-block pl-2 pt-2"
-                      style={{ marginLeft: 80 }}
-                    >
-                      <div className="font-serif-cjk text-[13px] font-semibold tracking-widest text-[color:var(--graphite-soft)]">
-                        {b.name}
-                      </div>
-                      <div className="text-[10px] text-[color:var(--graphite-faint)]">
-                        {b.sub}
-                      </div>
-                    </div>
-                  </div>
+                  />
                 );
               })}
             </div>
 
-            {/* 时间竖脊 */}
-            <div className="relative">
-              <div className="spine-line" style={{ right: 18 }} />
-              {allTicks.map((tk) => (
-                <div key={tk.y}>
-                  <div
-                    className="spine-tick"
-                    style={{ top: tk.top, right: 18, width: 8 }}
-                  />
-                  <span
-                    className="spine-year absolute text-[11px]"
-                    style={{ top: tk.top - 7, right: 32 }}
-                  >
-                    {fmtYear(tk.y)}
-                  </span>
-                </div>
-              ))}
+            {/* 时间竖脊（横向滚动时吸附） */}
+            <div className="sticky left-0 z-20 bg-[color:var(--paper)]">
+              <div className="relative h-full">
+                <div className="spine-line" style={{ right: 14 }} />
+                {allTicks.map((tk) => (
+                  <div key={tk.y}>
+                    <div className="spine-tick" style={{ top: tk.top, right: 14, width: 7 }} />
+                    <span
+                      className="spine-year absolute text-[10px]"
+                      style={{ top: tk.top - 6, right: 26 }}
+                    >
+                      {fmtYear(tk.y)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 时代竖轨：竖排时代名 */}
+            <div className="sticky z-20 bg-[color:var(--paper)]" style={{ left: 64 }}>
+              <div className="relative h-full border-r border-dashed border-[color:var(--line)]">
+                {BANDS.map((b) => {
+                  const top = ty(b.from);
+                  const bottom = ty(b.to);
+                  return (
+                    <div
+                      key={b.name}
+                      className="band-rail-text absolute left-0 right-0 flex items-center justify-center"
+                      style={{ top, height: bottom - top }}
+                      title={`${b.name} · ${b.sub}`}
+                    >
+                      <span>{b.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* 地区列 */}
             {placedByRegion.map(({ region, items }) => (
-              <div key={region.id} className="region-col relative px-3">
+              <div key={region.id} className="region-col relative z-10 px-2">
                 {items.map(({ ev, top }) => {
                   const key = region.id + ":" + ev.y + ev.t;
-                  const open = expanded.has(key);
+                  const active = sel?.ev === ev;
                   return (
                     <div
                       key={key}
-                      className="pencil-card absolute left-3 right-3"
+                      className={"pencil-card absolute left-2 right-2" + (active ? " is-active" : "")}
                       style={{ top }}
-                      onClick={() => toggle(key)}
+                      onClick={() => setSel(active ? null : { ev, region })}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && toggle(key)}
+                      onKeyDown={(e) => e.key === "Enter" && setSel({ ev, region })}
                     >
                       <div
                         className="year-num text-[11px] font-semibold"
@@ -181,11 +188,6 @@ export default function World() {
                         {ev.star && "★ "}
                         {ev.t}
                       </div>
-                      {open && (
-                        <div className="mt-1 border-t border-dashed border-[color:var(--line)] pt-1 text-[12px] leading-relaxed text-[color:var(--graphite-soft)]">
-                          {ev.d}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -195,9 +197,36 @@ export default function World() {
         </div>
       </main>
 
-      <footer className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-[color:var(--graphite-faint)]">
-        时间轴为分段比例（越靠近现代越舒展），各地区列横向可滚动。中国列仅列关键坐标，详细分期见「中国卷」。
+      <footer className="mx-auto max-w-[1400px] px-5 pb-10 text-xs leading-relaxed text-[color:var(--graphite-faint)]">
+        时间轴为分段比例（越靠近现代越舒展）；年代以通行世界史年表为准，个别上古纪年各学说略有出入。中国列仅列关键坐标，详见「中国卷」。
       </footer>
+
+      {/* 悬浮详情框 */}
+      {sel && (
+        <aside className="detail-float" role="dialog" aria-label="事件详情">
+          <button
+            className="detail-close"
+            aria-label="关闭"
+            onClick={() => setSel(null)}
+          >
+            ×
+          </button>
+          <div className="flex items-center gap-2 text-[11px] tracking-widest" style={{ color: sel.region.pigment }}>
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-[2px] border border-[color:var(--graphite)]"
+              style={{ background: sel.region.pigment }}
+            />
+            {sel.region.name} · {fmtYear(sel.ev.y)} 年
+          </div>
+          <div className="font-serif-cjk mt-1.5 text-lg font-semibold leading-snug">
+            {sel.ev.star && "★ "}
+            {sel.ev.t}
+          </div>
+          <p className="mt-2 text-[13px] leading-relaxed text-[color:var(--graphite-soft)]">
+            {sel.ev.d}
+          </p>
+        </aside>
+      )}
     </div>
   );
 }
