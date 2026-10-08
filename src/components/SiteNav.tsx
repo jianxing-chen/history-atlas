@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { Seal } from "@/components/Seal";
 
 export type Volume = "china" | "world" | "methods";
 
@@ -15,13 +16,18 @@ const ACTIVE_CLS = "font-medium underline decoration-2 underline-offset-4";
 export function SiteNav({ active, note }: { active: Volume; note?: string }) {
   return (
     <header className="mx-auto flex max-w-[1400px] items-baseline gap-5 px-5 pb-3 pt-6">
-      <span className="font-serif-cjk text-2xl font-semibold tracking-wide">
-        历史图集
-      </span>
+      <Link to="/" className="flex items-center gap-2.5">
+        <Seal size={26} />
+        <span className="leading-none">
+          <span className="font-serif-cjk block text-xl font-semibold tracking-wide">
+            历史图集
+          </span>
+          <span className="mt-1 block text-[9px] uppercase tracking-[0.3em] text-[color:var(--graphite-faint)]">
+            Atlas of History
+          </span>
+        </span>
+      </Link>
       <nav className="flex items-baseline gap-4 text-sm">
-        <Link to="/" className={LINK_CLS}>
-          图集首页
-        </Link>
         {ITEMS.map((it) =>
           it.key === active ? (
             <span key={it.key} className={ACTIVE_CLS} aria-current="page">

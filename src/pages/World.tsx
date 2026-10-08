@@ -1,11 +1,20 @@
 import { useMemo, useState } from "react";
-import { REGIONS, BANDS, type WEvent, type Region } from "@/data/world";
+import { REGIONS, BANDS, GLOBAL_EVENTS, type WEvent, type Region } from "@/data/world";
 import { ty, totalHeight, ticks, fmtYear } from "@/lib/time";
 import { packPoints } from "@/lib/pack";
 import { SiteNav } from "@/components/SiteNav";
 import { useTitle } from "@/lib/useTitle";
 
 const COL_W = 210;
+
+/** 跨地区事件横贯线使用的虚拟"地区" */
+const GLOBAL_META: Region = {
+  id: "global",
+  name: "跨地区 · 全球",
+  en: "Global",
+  pigment: "#8a5a48",
+  events: [],
+};
 
 /* 世界事件按节点卡布局：时间钉在真实位置，标签卡防碰撞下推 */
 type EvItem = WEvent & { n: string; s: number; e: number };
@@ -28,11 +37,31 @@ export default function World() {
   useTitle("世界卷 · 历史图集");
   const H = totalHeight();
   const [sel, setSel] = useState<Sel | null>(null);
+  // 每列折叠状态：默认纲要（major/star），可逐列展开全部
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const allOpen = REGIONS.every((r) => open[r.id]);
   const placedByRegion = useMemo(
-    () => REGIONS.map((r) => ({ region: r, items: layoutEvents(r.events) })),
-    []
+    () =>
+      REGIONS.map((r) => {
+        const visible = open[r.id]
+          ? r.events
+          : r.events.filter((ev) => ev.major || ev.star);
+        return { region: r, items: layoutEvents(visible), total: r.events.length };
+      }),
+    [open]
   );
   const allTicks = useMemo(() => ticks(), []);
+  // 跨地区横贯线标签：真实年份位置 + 最小间距下推
+  const globalChips = useMemo(() => {
+    let last = -Infinity;
+    return [...GLOBAL_EVENTS]
+      .sort((a, b) => a.y - b.y)
+      .map((g) => {
+        const top = Math.max(ty(g.y) - 9, last + 22);
+        last = top;
+        return { g, top, trueTop: ty(g.y) };
+      });
+  }, []);
   const boardH = useMemo(() => {
     let m = H + 40;
     for (const { items } of placedByRegion) {
@@ -44,7 +73,7 @@ export default function World() {
 
   return (
     <div className="min-h-screen">
-      <SiteNav active="world" note="竖版 · 六地区对照 · 点击事件看详细解说" />
+      <SiteNav active="world" note="竖版 · 六地区对照 · 默认纲要视图，列头可展开全部" />
       <hr className="pencil-rule mx-auto max-w-[1400px]" />
 
       <main className="mx-auto max-w-[1400px] overflow-x-auto px-3 pb-24 pt-4">
@@ -55,23 +84,45 @@ export default function World() {
             style={{ gridTemplateColumns: GRID }}
           >
             <div className="bg-[color:var(--paper)]" />
-            <div className="bg-[color:var(--paper)]" />
-            {REGIONS.map((r) => (
-              <div key={r.id} className="bg-[color:var(--paper)] px-3 pb-2 pt-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="inline-block h-3 w-3 rounded-[3px] border border-[color:var(--graphite)]"
-                    style={{ background: r.pigment }}
-                  />
-                  <span className="font-serif-cjk text-base font-semibold">
-                    {r.name}
-                  </span>
+            <div className="flex items-end justify-center bg-[color:var(--paper)] pb-1.5">
+              <button
+                className="rounded border border-[color:var(--line)] px-1.5 py-0.5 text-[10px] text-[color:var(--graphite-soft)] hover:border-[color:var(--graphite-soft)]"
+                onClick={() =>
+                  setOpen(allOpen ? {} : Object.fromEntries(REGIONS.map((r) => [r.id, true])))
+                }
+                title={allOpen ? "全部收起为纲要" : "展开所有地区列"}
+              >
+                {allOpen ? "全收" : "全展"}
+              </button>
+            </div>
+            {placedByRegion.map(({ region: r, items, total }) => {
+              const isOpen = !!open[r.id];
+              return (
+                <div key={r.id} className="bg-[color:var(--paper)] px-3 pb-2 pt-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="inline-block h-3 w-3 rounded-[3px] border border-[color:var(--graphite)]"
+                      style={{ background: r.pigment }}
+                    />
+                    <span className="font-serif-cjk text-base font-semibold">
+                      {r.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pl-5">
+                    <span className="text-[10px] italic text-[color:var(--graphite-faint)]">
+                      {r.en}
+                    </span>
+                    <button
+                      className="rounded border border-[color:var(--line)] px-1.5 py-0.5 text-[10px] not-italic text-[color:var(--graphite-soft)] hover:border-[color:var(--graphite-soft)]"
+                      onClick={() => setOpen((o) => ({ ...o, [r.id]: !o[r.id] }))}
+                      title={isOpen ? "收起为纲要视图" : `展开全部 ${total} 条`}
+                    >
+                      {isOpen ? `收起 ▾` : `${items.length}/${total} ▸`}
+                    </button>
+                  </div>
                 </div>
-                <div className="pl-5 text-[10px] italic text-[color:var(--graphite-faint)]">
-                  {r.en}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* 板体 */}
@@ -89,6 +140,34 @@ export default function World() {
                   />
                 );
               })}
+            </div>
+
+            {/* 跨地区·全球性事件：横贯虚线 + 标签 */}
+            <div
+              className="pointer-events-none absolute z-[15]"
+              style={{ left: 92, right: 0, top: 0, bottom: 0 }}
+            >
+              {globalChips.map(({ g, top, trueTop }) => (
+                <div key={g.y + g.t}>
+                  <div
+                    className="absolute left-0 right-0 border-t border-dashed"
+                    style={{ top: trueTop, borderColor: "rgba(138, 90, 72, 0.55)" }}
+                  />
+                  <button
+                    className="pointer-events-auto absolute left-1 flex max-w-[46%] items-center gap-1.5 rounded-[3px] border bg-[color:var(--paper)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--graphite-soft)] shadow-sm hover:text-[color:var(--graphite)]"
+                    style={{ top, borderColor: "rgba(138, 90, 72, 0.55)" }}
+                    onClick={() => setSel({ ev: g, region: GLOBAL_META })}
+                    title={`${g.t} · ${fmtYear(g.y)} 年`}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 shrink-0 rotate-45 border"
+                      style={{ background: "#8a5a48", borderColor: "var(--graphite)" }}
+                    />
+                    <span className="year-num shrink-0">{fmtYear(g.y)}</span>
+                    <span className="truncate">{g.t}</span>
+                  </button>
+                </div>
+              ))}
             </div>
 
             {/* 时间竖脊（横向滚动时吸附） */}
@@ -165,10 +244,11 @@ export default function World() {
                       </div>
                       <div
                         className={
-                          ev.star
-                            ? "font-serif-cjk text-[14px] font-semibold leading-snug"
-                            : "text-[13px] font-medium leading-snug"
+                          (ev.star
+                            ? "font-serif-cjk text-[14px] font-semibold"
+                            : "text-[13px] font-medium") + " truncate leading-snug"
                         }
+                        title={ev.t}
                       >
                         {ev.star && "★ "}
                         {ev.t}
@@ -187,8 +267,9 @@ export default function World() {
         横带采用世界通史分期（上古 → 古典/轴心时代 → 中古 → 近代早期 → 近代 → 现当代），而非考古学分期——石
         器/青铜/铁器时代在全球不同步，不宜作统一标尺；该框架源于欧洲史学传统，用于其他地区学界亦有讨论，
         故横带采用主题式命名。时间轴为分段比例（越靠近现代越舒展）；年代以通行世界史年表为准，个别上古纪年各
-        学说略有出入。中国列仅列关键坐标，详见「中国卷」。事件左侧的菱形钉标记真实年份位置；
-        标签框为避免文字重叠可能略向下偏移，偏移处以细线连回真实位置。
+        学说略有出入。默认为纲要视图（每列仅显示主线事件），点列头按钮可展开全部；棕色横贯虚线为跨地区/全球
+        性事件。事件标题过长时省略显示，悬停可见全称，点击看详细解说与今址；左侧菱形钉标记真实年份位置，
+        标签框为避免重叠可能略向下偏移，偏移处以细线连回真实位置。中国列仅列关键坐标，详见「中国卷」。
       </footer>
 
       {/* 悬浮详情框 */}
@@ -212,6 +293,14 @@ export default function World() {
             {sel.ev.star && "★ "}
             {sel.ev.t}
           </div>
+          {sel.ev.loc && (
+            <div className="mt-1.5 flex items-baseline gap-1.5 text-[12px] text-[color:var(--graphite-faint)]">
+              <span className="shrink-0 rounded-[3px] border border-[color:var(--line)] px-1 py-px text-[10px]">
+                今址
+              </span>
+              {sel.ev.loc}
+            </div>
+          )}
           <p className="mt-2 text-[13px] leading-relaxed text-[color:var(--graphite-soft)]">
             {sel.ev.d}
           </p>

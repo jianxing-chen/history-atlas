@@ -155,7 +155,7 @@ export default function China() {
                         tabIndex={0}
                         onKeyDown={(e) => e.key === "Enter" && setSel({ it: p.it, lane })}
                       >
-                        <div className="text-[12px] font-medium leading-tight">
+                        <div className="truncate text-[12px] font-medium leading-tight" title={p.it.n}>
                           {p.it.n}
                         </div>
                         {tall && (
@@ -195,7 +195,7 @@ export default function China() {
                         <div className="year-num text-[11px] font-semibold" style={{ color: lane.pigment }}>
                           {fmtYear(p.it.s)} 年
                         </div>
-                        <div className="text-[12px] font-medium leading-tight">
+                        <div className="truncate text-[12px] font-medium leading-tight" title={p.it.n}>
                           {p.it.n}
                         </div>
                       </div>
@@ -241,6 +241,14 @@ export default function China() {
             {fmtYear(sel.it.s)}
             {sel.it.e !== sel.it.s && ` — ${fmtYear(sel.it.e)}`}
           </div>
+          {sel.it.loc && (
+            <div className="mt-1.5 flex items-baseline gap-1.5 text-[12px] text-[color:var(--graphite-faint)]">
+              <span className="shrink-0 rounded-[3px] border border-[color:var(--line)] px-1 py-px text-[10px]">
+                今址
+              </span>
+              {sel.it.loc}
+            </div>
+          )}
           <p className="mt-2 text-[13px] leading-relaxed text-[color:var(--graphite-soft)]">
             {sel.it.d}
           </p>
