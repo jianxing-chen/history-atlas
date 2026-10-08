@@ -140,6 +140,45 @@ body {
   border-radius: 2px;
 }
 
+/* ─── 方法卷：切片尺 ─── */
+.slice-row {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.slice-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 1px solid var(--graphite);
+  border-radius: 8px 2px 9px 3px / 3px 9px 2px 8px;
+  overflow: hidden;
+  padding: 0 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+.slice-seg span {
+  font-size: 10px;
+  color: var(--graphite);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slice-seg em {
+  font-size: 9px;
+  font-style: normal;
+  color: var(--graphite-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.method-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+}
+
 /* ─── 时代竖轨：竖排文字 ─── */
 .band-rail-text {
   writing-mode: vertical-rl;

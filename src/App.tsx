@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router";
 import Home from "./pages/Home";
 import World from "./pages/World";
 import China from "./pages/China";
+import Methods from "./pages/Methods";
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/world" element={<World />} />
       <Route path="/china" element={<China />} />
+      <Route path="/methods" element={<Methods />} />
     </Routes>
   );
 }

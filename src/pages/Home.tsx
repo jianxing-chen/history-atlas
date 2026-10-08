@@ -50,6 +50,20 @@ export default function Home() {
         </Link>
       </div>
 
+      {/* 卷三：方法卷（窄条） */}
+      <Link to="/methods" className="volume-card mt-8 block p-5 no-underline">
+        <div className="flex flex-wrap items-baseline gap-3">
+          <span className="text-xs tracking-widest text-[#7d6b8a]">卷三 · 方法论</span>
+          <span className="font-serif-cjk text-2xl font-semibold text-[color:var(--graphite)]">
+            方法卷
+          </span>
+          <span className="text-[13px] text-[color:var(--graphite-soft)]">
+            同一条时间，六把尺：考古学 / 文献 / 王朝 / 社会形态 / 东洋史 / 全球史，
+            六种分期方法的适用边界与争议 →
+          </span>
+        </div>
+      </Link>
+
       {/* 分期说明 */}
       <div className="hatch-band-strong mt-14 rounded p-5">
         <div className="font-serif-cjk text-sm font-semibold tracking-widest text-[color:var(--graphite-soft)]">

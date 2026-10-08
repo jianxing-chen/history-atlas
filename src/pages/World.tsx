@@ -67,6 +67,12 @@ export default function World() {
           <span className="font-medium underline decoration-2 underline-offset-4">
             世界卷
           </span>
+          <Link
+            to="/methods"
+            className="text-[color:var(--graphite-soft)] underline-offset-4 hover:underline"
+          >
+            方法卷
+          </Link>
         </nav>
         <span className="ml-auto hidden text-xs text-[color:var(--graphite-faint)] sm:block">
           竖版 · 六地区对照 · 点击事件看详细解说
@@ -126,8 +132,8 @@ export default function World() {
                   <div key={tk.y}>
                     <div className="spine-tick" style={{ top: tk.top, right: 14, width: 7 }} />
                     <span
-                      className="spine-year absolute text-[10px]"
-                      style={{ top: tk.top - 6, right: 26 }}
+                      className="spine-year absolute whitespace-nowrap text-[10px]"
+                      style={{ top: Math.max(tk.top - 6, 3), right: 26 }}
                     >
                       {fmtYear(tk.y)}
                     </span>
