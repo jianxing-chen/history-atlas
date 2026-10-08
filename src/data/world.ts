@@ -22,12 +22,12 @@ export interface Band {
 }
 
 export const BANDS: Band[] = [
-  { from: -3500, to: -1500, name: "早期文明起源", sub: "文字 · 城市 · 国家" },
-  { from: -1500, to: 500, name: "古典文明与轴心时代", sub: "帝国与思想的奠基" },
-  { from: 500, to: 1500, name: "中古世界", sub: "宗教、商路与王朝" },
-  { from: 1500, to: 1800, name: "大航海与近代曙光", sub: "世界开始连成一体" },
-  { from: 1800, to: 1945, name: "革命与帝国", sub: "工业化与总体战" },
-  { from: 1945, to: 2027, name: "当代世界", sub: "冷战、全球化与数字时代" },
+  { from: -3500, to: -1500, name: "早期文明起源", sub: "上古史 · 文字/城市/国家" },
+  { from: -1500, to: 500, name: "古典文明与轴心时代", sub: "古典时代 · 帝国与思想的奠基" },
+  { from: 500, to: 1500, name: "中古世界", sub: "中世纪/中古史 · 宗教与商路" },
+  { from: 1500, to: 1800, name: "大航海与近代曙光", sub: "近代早期 · 世界连成一体" },
+  { from: 1800, to: 1945, name: "革命与帝国", sub: "近代史 · 工业化与总体战" },
+  { from: 1945, to: 2027, name: "当代世界", sub: "现当代史 · 冷战/全球化/数字时代" },
 ];
 
 export const REGIONS: Region[] = [
