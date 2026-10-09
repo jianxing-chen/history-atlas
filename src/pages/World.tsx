@@ -45,7 +45,12 @@ export default function World() {
   const allOpen = REGIONS.every((r) => open[r.id]);
   // 展开的列在网格中占 1.45fr；按最小容器宽 1352 估算每列实际像素宽（保守，宁可高估卡高）
   const OPEN_RATIO = 1.45;
-  const weights = REGIONS.map((r) => (open[r.id] ? OPEN_RATIO : 1));
+  // weights 必须随 open 记忆化：placedByRegion 依赖它，若每次渲染生成新数组，
+  // 事件对象会被整体重建，sel?.ev === ev 的选中判定随之失效（详情框无法点击关闭）
+  const weights = useMemo(
+    () => REGIONS.map((r) => (open[r.id] ? OPEN_RATIO : 1)),
+    [open]
+  );
   const totalW = weights.reduce((a, b) => a + b, 0);
   const placedByRegion = useMemo(
     () =>
@@ -159,7 +164,9 @@ export default function World() {
               className="pointer-events-none absolute z-[15]"
               style={{ left: 92, right: 0, top: 0, bottom: 0 }}
             >
-              {globalChips.map(({ g, top, trueTop }) => (
+              {globalChips.map(({ g, top, trueTop }) => {
+                const chipActive = sel?.ev === g;
+                return (
                 <div key={g.y + g.t}>
                   <div
                     className="absolute left-0 right-0 border-t border-dashed"
@@ -168,7 +175,7 @@ export default function World() {
                   <button
                     className="pointer-events-auto absolute left-1 flex max-w-[46%] items-center gap-1.5 rounded-[3px] border bg-[color:var(--paper)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--graphite-soft)] shadow-sm hover:text-[color:var(--graphite)]"
                     style={{ top, borderColor: "rgba(138, 90, 72, 0.55)" }}
-                    onClick={() => setSel({ ev: g, region: GLOBAL_META })}
+                    onClick={() => setSel(chipActive ? null : { ev: g, region: GLOBAL_META })}
                     title={`${g.t} · ${fmtYear(g.y)} 年`}
                   >
                     <span
@@ -179,7 +186,8 @@ export default function World() {
                     <span className="truncate">{g.t}</span>
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* 时间竖脊（横向滚动时吸附） */}
