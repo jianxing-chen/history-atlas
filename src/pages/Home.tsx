@@ -1,181 +1,86 @@
 import { Link } from "react-router";
+import { ArrowDown, ArrowRight, BookOpen, GitBranch, MoveRight, Search } from "lucide-react";
 import { useTitle } from "@/lib/useTitle";
 import { Seal } from "@/components/Seal";
+import { MARCH_EVENTS, MARCH_SOURCES } from "@/data/longMarch";
 
-const VOLUMES = [
-  {
-    no: "卷一",
-    name: "中国卷",
-    en: "CHINA",
-    to: "/china",
-    pigment: "#b4574a",
-    desc: "从泥河湾、元谋人到今天：考古学时代 / 史学划分 / 朝代更迭 / 遗址文化 / 大事记，五种分期体系在五条泳道上互相对齐。",
-    meta: "约 200 万年前 — 今 · 136 条目",
-  },
-  {
-    no: "卷二",
-    name: "世界卷",
-    en: "WORLD",
-    to: "/world",
-    pigment: "#4a6d9c",
-    desc: "中国 / 两河·埃及·中东 / 印度 / 欧洲 / 东亚·东南亚 / 美洲·非洲六列并排：二里头与汉谟拉比、秦统一与亚历山大、郑和与哥伦布，一眼对齐。",
-    meta: "前 3500 — 今 · 160+ 节点 · 纲要/全部可切换",
-  },
-  {
-    no: "卷三",
-    name: "方法卷",
-    en: "METHODS",
-    to: "/methods",
-    pigment: "#7d6b8a",
-    desc: "同一条时间，六把尺：考古学 / 文献 / 王朝 / 社会形态 / 东洋史 / 全球史——六种分期方法各自的适用边界与争议。",
-    meta: "方法论 · 6 把分期尺对照",
-  },
+const COLLECTIONS = [
+  { to: "/china", index: "A—01", title: "中国通史长卷", type: "纵向时间轴", range: "约200万年前—今", desc: "把考古文化、朝代政权与大事记放在同一条时间脊上，让不同尺度彼此对齐。", color: "#9b4539", count: "136 条目" },
+  { to: "/world", index: "A—02", title: "世界文明对照", type: "多地区泳道", range: "前3500—今", desc: "六个文明区域并排展开。不是六份孤立年表，而是一张可以横向阅读的世界。", color: "#3f6972", count: "160+ 节点" },
+  { to: "/methods", index: "A—03", title: "历史的六把尺", type: "方法对照", range: "分期与尺度", desc: "同一段时间，用六种方法切开。看见分期的用途，也看见它各自的边界。", color: "#7d7250", count: "6 种方法" },
 ];
 
 export default function Home() {
-  useTitle("历史图集 · 纸上长卷里的中国与世界");
+  useTitle("历史图集 · 在时间中理解历史");
   return (
-    <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-5 pb-16">
-      {/* ===== 扉页 ===== */}
-      <section className="grid gap-10 pt-14 md:grid-cols-[auto_auto_1fr] md:gap-14">
-        {/* 竖排题名 + 印章 */}
-        <div className="flex items-start gap-5 md:gap-4">
-          <h1
-            className="font-serif-cjk text-6xl font-semibold leading-none tracking-[0.18em] text-[color:var(--graphite)] md:text-7xl"
-            style={{ writingMode: "vertical-rl" }}
-          >
-            历史图集
-          </h1>
-          <div className="flex flex-col items-center gap-3 pt-1">
-            <Seal size={30} />
-            <span
-              className="text-[10px] uppercase tracking-[0.35em] text-[color:var(--graphite-faint)]"
-              style={{ writingMode: "vertical-rl" }}
-            >
-              Atlas of History
-            </span>
+    <div className="atlas-home">
+      <header className="home-nav">
+        <Link to="/" className="home-brand" aria-label="历史图集首页"><Seal size={31} /><span>历史图集<small>ATLAS OF HISTORY</small></span></Link>
+        <nav aria-label="主导航"><a href="#collections">图集目录</a><a href="#reading">阅读方法</a><Link to="/methods">关于方法</Link></nav>
+        <Link className="nav-search" to="/china" aria-label="进入中国通史长卷"><Search size={16} /><span>开始探索</span></Link>
+      </header>
+
+      <main>
+        <section className="home-hero">
+          <div className="hero-copy">
+            <div className="home-kicker"><span /> 一座可以走进去的历史坐标系</div>
+            <h1>把历史，<br />放回<span>时间</span>里。</h1>
+            <p>事件不是孤立的点。沿着时间向前，看它如何发生；沿着关系向外，看它与谁相连。</p>
+            <div className="hero-actions"><Link className="primary-action" to="/long-march">进入本期专题 <ArrowRight size={17} /></Link><a className="text-action" href="#collections">浏览全部图集 <ArrowDown size={15} /></a></div>
           </div>
-        </div>
-
-        {/* 时间脊线：一根竖线，三颗钉，钉即三卷 */}
-        <div className="relative hidden h-[360px] w-44 md:block" aria-hidden={false}>
-          <div className="absolute bottom-2 left-[13px] top-2 w-px bg-[color:var(--graphite)] opacity-70" />
-          {VOLUMES.map((v, i) => (
-            <Link
-              key={v.to}
-              to={v.to}
-              className="group absolute left-0 flex items-center gap-3 no-underline"
-              style={{ top: `${12 + i * 36}%` }}
-              title={`进入${v.name}`}
-            >
-              <span
-                className="inline-block h-3.5 w-3.5 rotate-45 rounded-[2px] border border-[color:var(--graphite)] transition-transform group-hover:scale-125"
-                style={{ background: v.pigment }}
-              />
-              <span className="leading-tight">
-                <span className="block text-[10px] tracking-[0.25em] text-[color:var(--graphite-faint)]">
-                  {v.no}
-                </span>
-                <span className="font-serif-cjk block text-lg font-semibold text-[color:var(--graphite)] group-hover:underline group-hover:underline-offset-4">
-                  {v.name}
-                </span>
-              </span>
-            </Link>
-          ))}
-          <span className="absolute bottom-0 left-6 text-[10px] italic text-[color:var(--graphite-faint)]">
-            时间向下流
-          </span>
-        </div>
-
-        {/* 引言 */}
-        <div className="max-w-xl self-center">
-          <p className="text-[15px] leading-loose text-[color:var(--graphite-soft)]">
-            这是一册画在纸上的时间：考古学分期、史学分期、朝代、遗址与大事，
-            被放在同一根竖直的时间脊上彼此对齐——
-            看清每一段历史站在哪个坐标，也看清不同的分期方法如何各说各话。
-          </p>
-          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[color:var(--graphite-faint)]">
-            <span>三卷 · 300+ 条目</span>
-            <span>点击条目看详细解说与今址</span>
-            <span>争议与异说之处均有标注</span>
+          <div className="hero-instrument" aria-label="三条历史时间线示意">
+            <div className="instrument-top"><span>TIME / RELATION / CONTEXT</span><span>图版 001</span></div>
+            <div className="instrument-title">同一时间，<br />不同地点。</div>
+            <div className="mini-years"><span>前221</span><span>1644</span><span>1934</span><span>1936</span></div>
+            <div className="mini-rail">
+              <i className="mini-tick t1" /><i className="mini-tick t2" /><i className="mini-tick t3" /><i className="mini-tick t4" />
+              <div className="mini-event e1"><b>秦统一</b><span>中国</span></div>
+              <div className="mini-event e2"><b>明清易代</b><span>中国</span></div>
+              <div className="mini-event e3"><b>长征开始</b><span>于都</span></div>
+              <div className="mini-event e4"><b>三大主力会师</b><span>会宁 · 将台堡</span></div>
+            </div>
+            <div className="instrument-caption"><span>时间向下流动</span><span>点击事件，展开它的前后文</span></div>
           </div>
-        </div>
-      </section>
+          <div className="hero-folio"> HISTORY, MAPPED.<br /><span>EST. 2026</span></div>
+        </section>
 
-      <hr className="pencil-rule mx-auto mt-12 w-full" />
+        <section className="feature-story">
+          <div className="feature-art" aria-hidden="true">
+            <svg viewBox="0 0 640 330" role="img">
+              <path className="contour" d="M-20 260 C100 170 160 320 285 200 S490 55 670 120" />
+              <path className="contour faint" d="M-10 285 C120 195 175 340 305 220 S510 80 675 145" />
+              <path className="march-route" d="M60 270 C100 240 94 185 160 200 S250 255 290 184 S325 85 398 132 S475 220 520 152 S550 83 590 58" />
+              {[ [60,270], [160,200], [290,184], [398,132], [520,152], [590,58] ].map(([x,y], i) => <g key={i}><circle cx={x} cy={y} r="7" /><circle className="inner-dot" cx={x} cy={y} r="2" /></g>)}
+            </svg>
+            <span className="map-label l1">于都<small>1934.10</small></span><span className="map-label l2">遵义<small>1935.01</small></span><span className="map-label l3">会宁 / 将台堡<small>1936.10</small></span>
+            <span className="map-coordinate">26°N — 36°N<br />LONG MARCH</span>
+          </div>
+          <div className="feature-copy">
+            <div className="section-label">NEW DOSSIER <span>新专题</span></div>
+            <h2>长征：一次战略转移的<br />前因、征途与会师</h2>
+            <p>从第五次反“围剿”失败，到1936年三大主力会师。{MARCH_EVENTS.length}个史实节点，分开中央红军与各路红军的进程，也标出日期与里程的不同统计口径。</p>
+            <div className="feature-facts"><span><b>1934—1936</b>时间跨度</span><span><b>{MARCH_EVENTS.length}</b>关键节点</span><span><b>{MARCH_SOURCES.length}</b>权威来源</span></div>
+            <Link to="/long-march">展开长征图谱 <MoveRight size={19} /></Link>
+          </div>
+        </section>
 
-      {/* ===== 三卷题签 ===== */}
-      <section className="mt-10 space-y-5">
-        {VOLUMES.map((v) => (
-          <Link
-            key={v.to}
-            to={v.to}
-            className="volume-card group flex overflow-hidden no-underline"
-          >
-            {/* 题签：线装书标签 */}
-            <div
-              className="flex w-14 shrink-0 flex-col items-center justify-between border-r border-[color:var(--graphite)] py-4"
-              style={{ background: `color-mix(in srgb, ${v.pigment} 16%, var(--paper))` }}
-            >
-              <span
-                className="font-serif-cjk text-lg font-semibold tracking-[0.3em]"
-                style={{ writingMode: "vertical-rl", color: v.pigment }}
-              >
-                {v.name}
-              </span>
-              <span
-                className="text-[9px] tracking-[0.2em] text-[color:var(--graphite-faint)]"
-                style={{ writingMode: "vertical-rl" }}
-              >
-                {v.no}
-              </span>
-            </div>
-            <div className="flex-1 p-5">
-              <div className="flex flex-wrap items-baseline gap-3">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--graphite-faint)]">
-                  {v.en}
-                </span>
-                <span className="text-xs text-[color:var(--graphite-faint)]">{v.meta}</span>
-                <span className="ml-auto text-sm text-[color:var(--graphite-soft)] transition-transform group-hover:translate-x-1">
-                  开卷 →
-                </span>
-              </div>
-              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-[color:var(--graphite-soft)]">
-                {v.desc}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </section>
+        <section id="collections" className="collections-section">
+          <div className="section-heading"><div><span className="section-label">THE COLLECTION</span><h2>从一条线，进入一段历史</h2></div><p>长卷负责整体，专题负责细节。<br />每一张图都可以独立阅读，也可以彼此参照。</p></div>
+          <div className="collection-grid">{COLLECTIONS.map((item) => <Link to={item.to} className="collection-item" key={item.to} style={{ "--accent": item.color } as React.CSSProperties}>
+            <div className="collection-meta"><span>{item.index}</span><span>{item.type}</span></div>
+            <div className="collection-glyph" aria-hidden="true"><i /><i /><i /><b /></div>
+            <h3>{item.title}</h3><p>{item.desc}</p>
+            <div className="collection-bottom"><span>{item.range} · {item.count}</span><ArrowRight size={18} /></div>
+          </Link>)}</div>
+        </section>
 
-      {/* ===== 分期说明 ===== */}
-      <div className="hatch-band-strong mt-14 rounded p-5">
-        <div className="font-serif-cjk text-sm font-semibold tracking-widest text-[color:var(--graphite-soft)]">
-          这套图集如何划分历史
-        </div>
-        <ul className="mt-3 grid gap-x-8 gap-y-2 text-[13px] leading-relaxed text-[color:var(--graphite-soft)] sm:grid-cols-2">
-          <li>
-            <b className="font-medium text-[color:var(--graphite)]">考古学分期</b>
-            ：按生产工具——旧石器 → 新石器 → 铜石并用 → 青铜 → 铁器时代，适合史前。
-          </li>
-          <li>
-            <b className="font-medium text-[color:var(--graphite)]">文献·史学分期</b>
-            ：传说时代 / 信史时代、五种社会形态说、近代史 / 现代史等，各套说法并列对照。
-          </li>
-          <li>
-            <b className="font-medium text-[color:var(--graphite)]">朝代与政权</b>
-            ：有文字之后最细的刻度，并立政权（辽宋西夏金等）分行排列。
-          </li>
-          <li>
-            <b className="font-medium text-[color:var(--graphite)]">地区对照</b>
-            ：世界卷按文明区域分列，用同一根时间竖脊横向对齐。
-          </li>
-        </ul>
-      </div>
-
-      <footer className="mt-auto pt-14 text-center text-xs text-[color:var(--graphite-faint)]">
-        年代依据夏商周断代工程、中华文明探源工程及通行世界史年表 · 争议处已标注
-      </footer>
+        <section id="reading" className="reading-section">
+          <div className="reading-intro"><span className="section-label">TWO WAYS OF SEEING</span><h2>不只记住先后，<br />也看懂彼此。</h2><p>同一套史实，可以用两种镜头观看。时间线回答“何时发生”，关系图追问“为何如此”。</p></div>
+          <div className="reading-mode"><div className="mode-icon"><BookOpen size={22} /></div><span>01 / CHRONOLOGY</span><h3>时间线</h3><p>按日期展开事件，保留分期、地点和不同队伍的并行进程。</p><div className="mode-line"><i /><i /><i /><i /></div></div>
+          <div className="reading-mode"><div className="mode-icon"><GitBranch size={22} /></div><span>02 / RELATIONSHIP</span><h3>关系图</h3><p>把背景、决策、战役与会师连成因果网络，看到历史不是一条直线。</p><div className="mode-network"><i /><i /><i /><i /><b /><b /></div></div>
+        </section>
+      </main>
+      <footer className="home-footer"><div><Seal size={25} /><span>历史图集</span></div><p>以时间为经，以关系为纬。<br />史实有出处，异说有边界。</p><span>ATLAS OF HISTORY · 2026</span></footer>
     </div>
   );
 }
