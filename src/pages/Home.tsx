@@ -3,8 +3,10 @@ import { ArrowDown, ArrowRight, BookOpen, GitBranch, MoveRight, Search } from "l
 import { useTitle } from "@/lib/useTitle";
 import { Seal } from "@/components/Seal";
 import { MARCH_EVENTS, MARCH_SOURCES } from "@/data/longMarch";
+import { MODERN_EVENTS } from "@/data/modernChina";
 
 const COLLECTIONS = [
+  { to: "/modern-china", index: "S—02", title: "中国近现代史图谱", type: "势力与政权", range: "1840—1949", desc: "从晚清到新中国成立，沿政权、军队与合作关系，看军阀与各方势力如何兴起、转化和更替。", color: "#3f6972", count: `${MODERN_EVENTS.length} 节点 · 10 势力线` },
   { to: "/china", index: "A—01", title: "中国通史长卷", type: "纵向时间轴", range: "约200万年前—今", desc: "把考古文化、朝代政权与大事记放在同一条时间脊上，让不同尺度彼此对齐。", color: "#9b4539", count: "136 条目" },
   { to: "/world", index: "A—02", title: "世界文明对照", type: "多地区泳道", range: "前3500—今", desc: "六个文明区域并排展开。不是六份孤立年表，而是一张可以横向阅读的世界。", color: "#3f6972", count: "160+ 节点" },
   { to: "/methods", index: "A—03", title: "历史的六把尺", type: "方法对照", range: "分期与尺度", desc: "同一段时间，用六种方法切开。看见分期的用途，也看见它各自的边界。", color: "#7d7250", count: "6 种方法" },

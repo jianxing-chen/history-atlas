@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router'
 import './index.css'
 import './App.css'
 import './atlas.css'
+import './modern.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

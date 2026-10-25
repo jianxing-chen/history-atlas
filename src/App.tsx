@@ -4,6 +4,7 @@ import World from "./pages/World";
 import China from "./pages/China";
 import Methods from "./pages/Methods";
 import LongMarch from "./pages/LongMarch";
+import ModernChina from "./pages/ModernChina";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Route path="/china" element={<China />} />
       <Route path="/methods" element={<Methods />} />
       <Route path="/long-march" element={<LongMarch />} />
+      <Route path="/modern-china" element={<ModernChina />} />
     </Routes>
   );
 }

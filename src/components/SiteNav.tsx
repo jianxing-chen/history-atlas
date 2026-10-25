@@ -1,9 +1,10 @@
 import { Link } from "react-router";
 import { Seal } from "@/components/Seal";
 
-export type Volume = "china" | "world" | "methods" | "long-march";
+export type Volume = "china" | "world" | "methods" | "long-march" | "modern-china";
 
 const ITEMS: { key: Volume; to: string; label: string }[] = [
+  { key: "modern-china", to: "/modern-china", label: "近现代卷" },
   { key: "long-march", to: "/long-march", label: "长征图谱" },
   { key: "china", to: "/china", label: "中国卷" },
   { key: "world", to: "/world", label: "世界卷" },
