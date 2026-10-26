@@ -10,11 +10,12 @@ const GRAPH = [
   { id: "xiangjiang", x: 38, y: 25 }, { id: "tongdao", x: 38, y: 63 },
   { id: "liping", x: 51, y: 63 }, { id: "zunyi", x: 51, y: 25 },
   { id: "chishui", x: 64, y: 25 }, { id: "jinsha", x: 64, y: 63 },
-  { id: "maogong", x: 77, y: 25 }, { id: "wuqi", x: 77, y: 63 },
+  { id: "luding", x: 72, y: 44 }, { id: "maogong", x: 79, y: 25 },
+  { id: "grassland", x: 88, y: 44 }, { id: "wuqi", x: 77, y: 63 },
   { id: "sangzhi", x: 51, y: 88 }, { id: "ganzi", x: 77, y: 88 },
-  { id: "huining", x: 90, y: 25 }, { id: "jiangtaipu", x: 90, y: 63 },
+  { id: "huining", x: 92, y: 25 }, { id: "jiangtaipu", x: 92, y: 63 },
 ];
-const EDGES = [[0,1],[1,2],[1,3],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[10,11],[11,13],[8,12],[9,13],[12,13]];
+const EDGES = [[0,1],[1,2],[1,3],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[9,14],[10,14],[12,13],[13,15],[11,15],[14,15]];
 
 function SourceMarks({ ids }: { ids: number[] }) {
   return <span className="source-marks">{ids.map((id) => <a key={id} href={MARCH_SOURCES.find((s) => s.id === id)?.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} aria-label={`查看来源 ${id}`}>[{id}]</a>)}</span>;
@@ -63,13 +64,13 @@ export default function LongMarch() {
         </div> : <div className="graph-layout">
           <div className="graph-scroll"><div className="march-graph">
             <svg viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker></defs>{EDGES.map(([a,b], i) => { const from = GRAPH[a], to = GRAPH[b]; return <line key={i} x1={from.x * 10} y1={from.y * 5.6} x2={to.x * 10} y2={to.y * 5.6} markerEnd="url(#arrow)" />; })}</svg>
-            <div className="graph-lane lane-a">中央红军主线</div><div className="graph-lane lane-b">决策与机动</div><div className="graph-lane lane-c">红二、六军团支线</div>
+            <div className="graph-lane lane-a">突围 · 转折 · 会师</div><div className="graph-lane lane-b">出征与北上</div><div className="graph-lane lane-c">红二、六军团支线</div>
             {GRAPH.map((node) => { const event = MARCH_EVENTS.find((item) => item.id === node.id)!; return <button key={node.id} className={`graph-node ${selected.id === node.id ? "active" : ""}`} style={{ left: `${node.x}%`, top: `${node.y}%` }} onClick={() => selectEvent(event)}><small>{event.date}</small><b>{event.title}</b><span>{event.kind}</span></button>; })}
           </div></div><EventDetail event={selected} />
         </div>}
       </section>
 
-      <section className="march-context"><div><span className="section-label">BEYOND A SINGLE LINE</span><h2>不是一支队伍的独白，<br />而是四条征程的会合。</h2></div><div className="route-ledger">{[["红一方面军（中央红军）","1934.10—1935.10","约二万五千里"],["红二方面军","1935.11—1936.10","约二万里"],["红四方面军","1935.03—1936.10","约一万里"],["红二十五军","1934.11—1935.09","约一万里"]].map(([name,time,distance]) => <div key={name}><b>{name}</b><span>{time}</span><em>{distance}</em></div>)}</div><p>“3+1”是理解整体长征的常用框架。里程取约数，仅用于区分中央红军与各路红军的统计口径；红二方面军前身为红二、六军团。</p></section>
+      <section className="march-context"><div><span className="section-label">BEYOND A SINGLE LINE</span><h2>不是一支队伍的独白，<br />而是四条征程的会合。</h2></div><div className="route-ledger">{[["红一方面军（中央红军）","1934.10—1935.10","约二万五千里"],["红二方面军","1935.11—1936.10","约二万里"],["红四方面军","1935.03—1936.10","约一万里"],["红二十五军","1934.11—1935.09","近万里"]].map(([name,time,distance]) => <div key={name}><b>{name}</b><span>{time}</span><em>{distance}</em></div>)}</div><p>“3+1”是理解整体长征的常用框架。里程取约数，仅用于区分中央红军与各路红军的统计口径；红二方面军前身为红二、六军团。</p></section>
 
       <section id="sources" className="march-sources"><div className="sources-heading"><BookOpen size={20} /><div><h2>史料与口径</h2><p>优先采用党史研究机构、新华社、国防部及中央媒体资料。点击条目可访问原文。</p></div></div><ol>{MARCH_SOURCES.map((source) => <li key={source.id}><span>[{source.id}]</span><a href={source.url} target="_blank" rel="noreferrer"><b>{source.title}</b><small>{source.org}</small><ExternalLink size={13} /></a></li>)}</ol><div className="source-caveat">编辑说明：本页是历史进程的导览，不替代完整战史。事件意义采用所引权威资料的表述；对“会师次数”“出发日期”“总里程”等存在统计口径差异的问题，不作无说明的合并。</div></section>
     </main>

@@ -7,7 +7,7 @@ import { Seal } from "@/components/Seal";
 
 const PHASES: ModernPhase[] = ["晚清危机", "共和与分裂", "国民革命", "对峙与侵略", "抗战与建国"];
 const GRAPH_IDS = ["opium","taiping","xiang-army","new-army","wuchang","roc-1912","yuan-death","first-united-front","northern-expedition","split-1927","northeast-flag","central-plains","mukden","xian","second-united-front","victory-1945","civil-war","three-campaigns","prc"];
-const GRAPH_EDGES = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[2,7],[6,7],[7,8],[8,9],[8,10],[9,11],[10,11],[11,12],[12,13],[13,14],[14,15],[15,16],[16,17],[17,18],[10,13]];
+const GRAPH_EDGES = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[8,10],[9,11],[10,11],[11,12],[12,13],[13,14],[14,15],[15,16],[16,17],[17,18],[10,13]];
 const POWER_EVENT: Record<string,string> = { qing:"roc-1912", "taiping-power":"taiping", "beiyang-government":"northeast-flag", "nanjing-government":"nanjing-1949", "xiang-huai":"huai-army", "beiyang-armies":"warlord-split", "regional-armies":"central-plains", kmt:"first-united-front", ccp:"ccp-founded", "japan-war":"mukden" };
 
 export default function ModernChina() {
@@ -64,5 +64,5 @@ function ModernDetail({ event }: { event: ModernEvent }) {
 }
 
 function PowerDetail({ power, event, onEvent }: { power: PowerSpan; event: ModernEvent; onEvent: () => void }) {
-  return <aside className="power-detail"><span>POWER / {power.group}</span><i style={{background:power.color}} /><h2>{power.name}</h2><div>{Math.floor(power.start)}—{Math.ceil(power.end)}</div><b>{power.status}</b><p>{power.note}</p><button onClick={onEvent}>阅读关联节点：{event.title}<ArrowRight size={13} /></button></aside>;
+  return <aside className="power-detail"><span>POWER / {power.group}</span><i style={{background:power.color}} /><h2>{power.name}</h2><div>{power.years}</div><b>{power.status}</b><p>{power.note}</p><button onClick={onEvent}>阅读关联节点：{event.title}<ArrowRight size={13} /></button></aside>;
 }

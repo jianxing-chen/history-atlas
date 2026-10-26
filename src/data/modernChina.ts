@@ -93,6 +93,7 @@ export type PowerSpan = {
   name: string;
   start: number;
   end: number;
+  years: string;
   group: "政权" | "军政集团" | "政党与战争";
   color: string;
   status: string;
@@ -100,16 +101,16 @@ export type PowerSpan = {
 };
 
 export const POWER_SPANS: PowerSpan[] = [
-  { id: "qing", name: "清王朝", start: 1840, end: 1912.12, group: "政权", color: "#7e725d", status: "1912 清帝退位", note: "中央权威在内外战争中逐步衰落，督抚与地方军事力量上升。" },
-  { id: "taiping-power", name: "太平天国", start: 1851, end: 1864, group: "政权", color: "#a2694b", status: "1864 天京陷落", note: "与清朝长期对峙；其冲击改变清廷的用兵和财政方式。" },
-  { id: "beiyang-government", name: "北洋政府 / 北京政府", start: 1912, end: 1928.99, group: "政权", color: "#526d76", status: "1928 统治结束", note: "政权名义延续，实际控制者从袁世凯转为直、皖、奉等派系。" },
-  { id: "nanjing-government", name: "南京国民政府", start: 1927.29, end: 1949.31, group: "政权", color: "#3f6972", status: "1949 大陆统治终结", note: "1928年形式统一；抗战时期西迁，战后还都南京。" },
-  { id: "xiang-huai", name: "湘系 → 淮系军政集团", start: 1854, end: 1901.8, group: "军政集团", color: "#9b7655", status: "递嬗而非骤灭", note: "勇营与督抚权力结合；湘军战后大量裁撤，淮系又影响北洋集团。" },
-  { id: "beiyang-armies", name: "北洋军事集团", start: 1895, end: 1928.99, group: "军政集团", color: "#637985", status: "1895 兴起 · 1928 失势", note: "小站练兵奠基，袁世凯死后分裂为直、皖、奉等派系。" },
-  { id: "regional-armies", name: "其他地方实力派 / 新旧军阀", start: 1916.5, end: 1949.75, group: "军政集团", color: "#8b806f", status: "改编、归附、战败、延续", note: "晋、滇、桂等系统与国民党内新军阀交错存在；1928不是共同终点。" },
-  { id: "kmt", name: "国民党及其革命组织前身", start: 1905, end: 1949.75, group: "政党与战争", color: "#436b79", status: "从革命党到执政党", note: "同盟会、国民党、中华革命党与中国国民党有组织沿革与名称变化。" },
-  { id: "ccp", name: "中国共产党", start: 1921, end: 1949.75, group: "政党与战争", color: "#a34135", status: "1921 成立 · 1949 执政", note: "经历合作、对峙、农村根据地、长征、敌后抗战与解放战争。" },
-  { id: "japan-war", name: "日本侵华战争与占领体系", start: 1931, end: 1945.7, group: "政党与战争", color: "#7f5552", status: "1931—1945", note: "1931年局部侵华与抗战开始，1937年全面侵华，1945年战败投降。" },
+  { id: "qing", name: "清王朝", start: 1840, end: 1912.12, years: "1840—1912", group: "政权", color: "#7e725d", status: "1912 清帝退位", note: "中央权威在内外战争中逐步衰落，督抚与地方军事力量上升。" },
+  { id: "taiping-power", name: "太平天国", start: 1851, end: 1864, years: "1851—1864", group: "政权", color: "#a2694b", status: "1864 天京陷落", note: "与清朝长期对峙；其冲击改变清廷的用兵和财政方式。" },
+  { id: "beiyang-government", name: "北洋政府 / 北京政府", start: 1912, end: 1928.99, years: "1912—1928", group: "政权", color: "#526d76", status: "1928 统治结束", note: "政权名义延续，实际控制者从袁世凯转为直、皖、奉等派系。" },
+  { id: "nanjing-government", name: "南京国民政府", start: 1927.29, end: 1949.31, years: "1927—1949", group: "政权", color: "#3f6972", status: "1949 大陆统治终结", note: "1928年形式统一；抗战时期西迁，战后还都南京。" },
+  { id: "xiang-huai", name: "湘系 → 淮系军政集团", start: 1854, end: 1901.87, years: "1854—1901", group: "军政集团", color: "#9b7655", status: "递嬗而非骤灭", note: "勇营与督抚权力结合；湘军战后大量裁撤，淮系又影响北洋集团。" },
+  { id: "beiyang-armies", name: "北洋军事集团", start: 1895, end: 1928.99, years: "1895—1928", group: "军政集团", color: "#637985", status: "1895 兴起 · 1928 失势", note: "小站练兵奠基，袁世凯死后分裂为直、皖、奉等派系。" },
+  { id: "regional-armies", name: "其他地方实力派 / 新旧军阀", start: 1916.5, end: 1949.75, years: "1916—1949", group: "军政集团", color: "#8b806f", status: "改编、归附、战败、延续", note: "晋、滇、桂等系统与国民党内新军阀交错存在；1928不是共同终点。" },
+  { id: "kmt", name: "国民党及其革命组织前身", start: 1905, end: 1949.75, years: "1905—1949", group: "政党与战争", color: "#436b79", status: "从革命党到执政党", note: "同盟会、国民党、中华革命党与中国国民党有组织沿革与名称变化。" },
+  { id: "ccp", name: "中国共产党", start: 1921, end: 1949.75, years: "1921—1949", group: "政党与战争", color: "#a34135", status: "1921 成立 · 1949 执政", note: "经历合作、对峙、农村根据地、长征、敌后抗战与解放战争。" },
+  { id: "japan-war", name: "日本侵华战争与占领体系", start: 1931, end: 1945.7, years: "1931—1945", group: "政党与战争", color: "#7f5552", status: "1931—1945", note: "1931年局部侵华与抗战开始，1937年全面侵华，1945年战败投降。" },
 ];
 
 export const MODERN_SOURCES = [
